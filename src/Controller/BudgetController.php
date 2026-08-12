@@ -139,65 +139,7 @@ class BudgetController extends AuthenticatedController
     public function edit($budgetId = null): void
     {
         $this->request->allowMethod(['post']);
-        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
-
-        // Missing or non-numeric identifier
-        if (!ctype_digit((string)$budgetId)) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Missing or invalid budget id']);
-
-            return;
-        }
-
-        // Malformed JSON / non-object body (BodyParserMiddleware returns null on invalid JSON)
-        $data = $this->request->getData();
-        if (!is_array($data)) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Invalid JSON body']);
-
-            return;
-        }
-
-        try {
-            $item = $this->Budget->get((int)$budgetId);
-        } catch (RecordNotFoundException) {
-            $this->response = $this->response->withStatus(404);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Budget not found']);
-
-            return;
-        }
-
-        // Apply the new data
-        $item = $this->Budget->patchEntity($item, $data);
-
-        // Haz errors?
-        if ($item->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', $item->getErrors());
-
-            return;
-        }
-
-        // Cannot save?
-        if (!$this->Budget->save($item)) {
-            $this->response = $this->response->withStatus(500);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Internal error']);
-
-            return;
-        }
-
-        $this->set('item', $item);
-        $this->set('success', true);
+        $this->editEntity($this->Budget, $budgetId, 'Budget');
     }
 
     /**

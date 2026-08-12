@@ -105,70 +105,14 @@ class AccountController extends AuthenticatedController
     /**
      * Edit method
      *
-     * @param mixed $entityId Identifier of the account.
+     * @param mixed $entityId Identifier of the account. Not type-hinted so that a missing
+     *   or non-numeric route segment can be reported as a normal 400 response instead of
+     *   an uncaught ArgumentCountError/TypeError.
      */
     public function edit($entityId = null): void
     {
         $this->request->allowMethod(['post']);
-        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
-
-        // Missing or non-numeric identifier
-        if (!ctype_digit((string)$entityId)) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Missing or invalid account id']);
-
-            return;
-        }
-
-        // Malformed JSON / non-object body (BodyParserMiddleware returns null on invalid JSON)
-        $data = $this->request->getData();
-        if (!is_array($data)) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Invalid JSON body']);
-
-            return;
-        }
-
-        try {
-            $item = $this->Account->get((int)$entityId);
-        } catch (RecordNotFoundException) {
-            $this->response = $this->response->withStatus(404);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Account not found']);
-
-            return;
-        }
-
-        // Apply the new data
-        $item = $this->Account->patchEntity($item, $data);
-
-        // Haz errors?
-        if ($item->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', $item->getErrors());
-
-            return;
-        }
-
-        // Cannot save?
-        if (!$this->Account->save($item)) {
-            $this->response = $this->response->withStatus(500);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Internal error']);
-
-            return;
-        }
-
-        $this->set('item', $item);
-        $this->set('success', true);
+        $this->editEntity($this->Account, $entityId, 'Account');
     }
 
     /**

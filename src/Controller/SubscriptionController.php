@@ -103,65 +103,7 @@ class SubscriptionController extends AuthenticatedController
     public function edit($subscriptionId = null): void
     {
         $this->request->allowMethod(['post']);
-        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
-
-        // Missing or non-numeric identifier
-        if (!ctype_digit((string)$subscriptionId)) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Missing or invalid subscription id']);
-
-            return;
-        }
-
-        // Malformed JSON / non-object body (BodyParserMiddleware returns null on invalid JSON)
-        $data = $this->request->getData();
-        if (!is_array($data)) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Invalid JSON body']);
-
-            return;
-        }
-
-        try {
-            $item = $this->Subscription->get((int)$subscriptionId);
-        } catch (RecordNotFoundException) {
-            $this->response = $this->response->withStatus(404);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Subscription not found']);
-
-            return;
-        }
-
-        // Apply the new data
-        $item = $this->Subscription->patchEntity($item, $data);
-
-        // Haz errors?
-        if ($item->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', $item->getErrors());
-
-            return;
-        }
-
-        // Cannot save?
-        if (!$this->Subscription->save($item)) {
-            $this->response = $this->response->withStatus(500);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Internal error']);
-
-            return;
-        }
-
-        $this->set('item', $item);
-        $this->set('success', true);
+        $this->editEntity($this->Subscription, $subscriptionId, 'Subscription');
     }
 
     /**

@@ -18,6 +18,8 @@ declare(strict_types=1);
 namespace eurokeep\Controller;
 
 use Authentication\AuthenticationService;
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use eurokeep\Model\Entity\User;
 use eurokeep\Model\Table\OwnedTable;
@@ -89,5 +91,83 @@ class AuthenticatedController extends AppController
             $this->addError('HTTP', $message);
         }
         exit(401);
+    }
+
+    /**
+     * I am the generic "edit" JSON API action shared by all CRUD controllers.
+     *
+     * I validate the identifier and the request body, load the entity, patch and validate it,
+     * then save it. Missing parameters, missing entities and invalid JSON input are reported
+     * as normal JSON responses (400/404) instead of uncaught exceptions.
+     *
+     * @param \Cake\ORM\Table $table The Table to load/patch/save the entity through.
+     * @param mixed $id The (route) identifier of the entity. Deliberately not type-hinted at
+     *   the call site (the action's own parameter) so that a missing or non-numeric value can
+     *   be reported as a 400 instead of an ArgumentCountError/TypeError.
+     * @param string $resourceName Human-readable name used in the "not found"/"missing id"
+     *   error messages, e.g. 'Account'.
+     * @param array $getOptions Options passed through to Table::get(), e.g. ['contain' => []].
+     */
+    final protected function editEntity(Table $table, mixed $id, string $resourceName, array $getOptions = []): void
+    {
+        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'error']);
+
+        // Missing or non-numeric identifier
+        if (!ctype_digit((string)$id)) {
+            $this->response = $this->response->withStatus(400);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ["Missing or invalid $resourceName id"]);
+
+            return;
+        }
+
+        // Malformed JSON / non-object body (BodyParserMiddleware returns null on invalid JSON)
+        $data = $this->request->getData();
+        if (!is_array($data)) {
+            $this->response = $this->response->withStatus(400);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ['Invalid JSON body']);
+
+            return;
+        }
+
+        try {
+            $item = $table->get((int)$id, $getOptions);
+        } catch (RecordNotFoundException) {
+            $this->response = $this->response->withStatus(404);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ["$resourceName not found"]);
+
+            return;
+        }
+
+        // Apply the new data
+        $item = $table->patchEntity($item, $data);
+
+        // Haz errors?
+        if ($item->hasErrors()) {
+            $this->response = $this->response->withStatus(400);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', $item->getErrors());
+
+            return;
+        }
+
+        // Cannot save?
+        if (!$table->save($item)) {
+            $this->response = $this->response->withStatus(500);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ['Internal error']);
+
+            return;
+        }
+
+        $this->set('item', $item);
+        $this->set('success', true);
     }
 }

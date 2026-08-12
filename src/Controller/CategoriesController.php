@@ -83,67 +83,8 @@ class CategoriesController extends AuthenticatedController
     public function edit($entityId = null): void
     {
         $this->request->allowMethod(['post']);
-        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
-
-        // Missing or non-numeric identifier
-        if (!ctype_digit((string)$entityId)) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Missing or invalid category id']);
-
-            return;
-        }
-
-        // Malformed JSON / non-object body (BodyParserMiddleware returns null on invalid JSON)
-        $data = $this->request->getData();
-        if (!is_array($data)) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Invalid JSON body']);
-
-            return;
-        }
-
         $this->Categories->recover();
-
-        try {
-            $item = $this->Categories->get((int)$entityId, contain: []);
-        } catch (RecordNotFoundException) {
-            $this->response = $this->response->withStatus(404);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Category not found']);
-
-            return;
-        }
-
-        // Apply the new data
-        $item = $this->Categories->patchEntity($item, $data);
-
-        // Haz errors?
-        if ($item->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', $item->getErrors());
-
-            return;
-        }
-
-        // Cannot save?
-        if (!$this->Categories->save($item)) {
-            $this->response = $this->response->withStatus(500);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Internal error']);
-
-            return;
-        }
-
-        $this->set('item', $item);
-        $this->set('success', true);
+        $this->editEntity($this->Categories, $entityId, 'Category', ['contain' => []]);
     }
 
     /**
