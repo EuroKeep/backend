@@ -31,12 +31,13 @@ class AuthController extends AppController
     /**
      * I handle the login.
      */
-    public function login(): void {
+    public function login(): void
+    {
         $this->request->allowMethod(['post']);
         $result = $this->Authentication->getResult();
 
         $errors = [];
-        if($result && $result->isValid()) {
+        if ($result && $result->isValid()) {
             $foundUser = $result->getData();
             $this->set('success', true);
             $this->set('user', $foundUser);
@@ -53,7 +54,8 @@ class AuthController extends AppController
      * I handle the logout.
      */
     #[NoReturn]
-    public function logout(): void {
+    public function logout(): void
+    {
         $this->Authentication->logout();
         header('Location: /a/login');
         exit(302);

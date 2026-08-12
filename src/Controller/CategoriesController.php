@@ -3,19 +3,23 @@ declare(strict_types=1);
 
 namespace eurokeep\Controller;
 
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Http\Response;
+use eurokeep\Model\Table\CategoriesTable;
+
 /**
  * Categories Controller
  *
- * @property \eurokeep\Model\Table\CategoriesTable $Categories
+ * @property CategoriesTable $Categories
  */
-class CategoriesController extends AppController
+class CategoriesController extends AuthenticatedController
 {
     public array $paginate = [
-        'limit' => 100,
-        'maxLimit' => 100,
+        'limit' => 1000,
+        'maxLimit' => 1000,
         'order' => [
-            'Transactions.created' => 'desc'
-        ]
+            'Category.name' => 'asc',
+        ],
     ];
 
     /**
@@ -38,20 +42,22 @@ class CategoriesController extends AppController
 
     /**
      * View method
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
+     *
+     * @param int $entityId Identifier of the Category.
+     * @throws \eurokeep\Controller\RecordNotFoundException When record not found.
      */
-    public function view($id = null)
+    public function view(int $entityId): void
     {
         $this->request->allowMethod(['get']);
         $this->Categories->recover();
-        $category = $this->Categories->get($id, contain: ['Budget', 'Transactions', 'Subscription']);
+        $category = $this->Categories->get($entityId, contain: ['Budget', 'Transactions', 'Subscription']);
         $this->set(compact('category'));
     }
 
     /**
      * Add method
      *
-     * @return \Cake\Http\Response|null|void Redirects on successful add, renders view otherwise.
+     * @return Response|null|void Redirects on successful add, renders view otherwise.
      */
     public function add()
     {
@@ -70,13 +76,13 @@ class CategoriesController extends AppController
     /**
      * Edit method
      *
-     * @param string|null $id Category id.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
+     * @param int $entityId Identifier of the Category.
+     * @throws RecordNotFoundException When record not found.
      */
-    public function edit($id = null)
+    public function edit(int $entityId)
     {
         $this->request->allowMethod(['post']);
-        $category = $this->Categories->get($id, contain: []);
+        $category = $this->Categories->get($entityId, contain: []);
         $category = $this->Categories->patchEntity($category, $this->request->getData());
         if ($this->Categories->save($category)) {
             $this->Flash->success(__('The category has been saved.'));
@@ -90,26 +96,34 @@ class CategoriesController extends AppController
     /**
      * Delete method
      *
-     * @param string|null $id Category id.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
+     * @param int $entityId Identifier of the Category.
+     * @throws RecordNotFoundException When record not found.
      */
-    public function delete($id = null)
+    public function delete(int $entityId): void
     {
-        $this->request->allowMethod(['post', 'delete']);
-        $category = $this->Categories->get($id);
-        if ($this->Categories->delete($category)) {
-            $this->Flash->success(__('The category has been deleted.'));
-        } else {
-            $this->Flash->error(__('The category could not be deleted. Please, try again.'));
+        $this->request->allowMethod(['delete']);
+
+        try {
+            $entity = $this->Categories->get($entityId);
+        } catch (RecordNotFoundException) {
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('errors', ['Category not found']);
+
+            $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
+
+            return;
         }
 
-        return $this->redirect(['action' => 'index']);
+        if (!$this->Categories->delete($entity)) {
+            $this->addError('Error', 'Category not deleted.');
+        }
     }
 
     /**
      * Tree function
      */
-    public function tree()
+    public function tree(): void
     {
         $categories = $this->Categories
             ->find('threaded')
@@ -118,7 +132,5 @@ class CategoriesController extends AppController
 
         $this->set('categoryTree', $categories);
         $this->viewBuilder()->setOption('serialize', ['categoryTree', 'success']);
-
     }
-
 }

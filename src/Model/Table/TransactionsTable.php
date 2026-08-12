@@ -3,19 +3,14 @@ declare(strict_types=1);
 
 namespace eurokeep\Model\Table;
 
-use Cake\Datasource\ResultSetInterface;
-use Cake\ORM\Behavior\TimestampBehavior;
 use Cake\ORM\ResultSet;
-use Closure;
 use eurokeep\Model\Entity\Transaction;
 use ArrayObject;
 use Cake\Datasource\EntityInterface;
-use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use Override;
-use Psr\SimpleCache\CacheInterface;
 
 /**
  * Transactions Model
@@ -146,15 +141,14 @@ class TransactionsTable extends Table
         return true;
     }
 
-
     public static function summarize(ResultSet $transactions): float
     {
         $a = 0;
 
-        foreach($transactions as $transaction) {
+        foreach ($transactions as $transaction) {
             $a += $transaction->balance_value;
         }
 
-        return round((float) $a, 2);
+        return round((float)$a, 2);
     }
 }

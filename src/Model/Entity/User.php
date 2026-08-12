@@ -5,9 +5,9 @@ namespace eurokeep\Model\Entity;
 
 use Authentication\PasswordHasher\DefaultPasswordHasher;
 use Cake\I18n\FrozenTime;
-use eurokeep\Model\Table\AccountTable;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use eurokeep\Model\Table\AccountTable;
 
 /**
  * User Entity

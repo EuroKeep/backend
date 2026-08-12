@@ -18,27 +18,25 @@ declare(strict_types=1);
 namespace eurokeep\Controller;
 
 use Authentication\AuthenticationService;
-use Cake\Event\EventInterface;
-use eurokeep\Model\Behavior\UserOwnedBehavior;
-use eurokeep\Model\Table\OwnedTable;
-use JetBrains\PhpStorm\NoReturn;
-use Override;
-use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use eurokeep\Model\Entity\User;
+use eurokeep\Model\Table\OwnedTable;
 use eurokeep\Model\Table\UsersTable;
+use JetBrains\PhpStorm\NoReturn;
+use Override;
 use Throwable;
 
 /**
  * I am an arbitrary Controller that makes sure a logged +in user is found.
  *
  * @link https://book.cakephp.org/4/en/controllers.html#the-app-controller
- *
  * @property AuthenticationService $Authentication
  */
 class AuthenticatedController extends AppController
 {
-    /** @var User I am the authenticated User */
+    /**
+     * @var User I am the authenticated User
+     */
     protected User $user;
 
     /**
@@ -92,5 +90,4 @@ class AuthenticatedController extends AppController
         }
         exit(401);
     }
-
 }

@@ -49,6 +49,10 @@ class SubscriptionTable extends OwnedTable
             'foreignKey' => 'category_id',
         ]);
 
+        $this->belongsTo('Account', [
+            'foreignKey' => 'account_id',
+        ]);
+
         $this->addBehavior('Timestamp');
     }
 

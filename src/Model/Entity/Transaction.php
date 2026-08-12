@@ -22,8 +22,8 @@ use eurokeep\Model\Table\AccountTable;
  * @property int|null $transfer_id
  * @property int|null $piggybank_id
  *
- * @property \eurokeep\Model\Entity\Category $category
- * @property \eurokeep\Model\Entity\Account $account
+ * @property Category $category
+ * @property Account $account
  */
 class Transaction extends Entity
 {

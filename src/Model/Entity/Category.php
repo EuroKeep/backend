@@ -7,6 +7,7 @@ use Cake\Chronos\Chronos;
 use Cake\Datasource\ResultSetInterface;
 use Cake\I18n\DateTime;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -84,6 +85,9 @@ class Category extends Entity
             ->all()
             ->extract('id')
             ->toArray();
+        if(empty($accountIds)) {
+            return new ResultSet([]);
+        }
 
         $descendants = $this
             ->getChildren(false)

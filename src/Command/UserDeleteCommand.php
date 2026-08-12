@@ -18,37 +18,28 @@ use Override;
 class UserDeleteCommand extends Command
 {
     /**
-     * Hook method for defining this command's option parser.
-     *
-     * @see https://book.cakephp.org/4/en/console-commands/commands.html#defining-arguments-and-options
-     * @param ConsoleOptionParser $parser The parser to be defined
-     * @return ConsoleOptionParser The built parser.
+     * @inheritDoc
      */
     #[Override]
-    public function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
+    protected function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
     {
-        $parser = parent::buildOptionParser($parser);
-
-        return $parser;
+        return parent::buildOptionParser($parser);
     }
 
     /**
-     * Implement this method with your command's logic.
-     *
-     * @param Arguments $args The command arguments.
-     * @param ConsoleIo $io The console io
-     * @return null|void|int The exit code or null for success
+     * @inheritDoc
      */
     #[Override]
     public function execute(Arguments $args, ConsoleIo $io)
     {
+        parent::execute($args, $io);
         /** @var UsersTable $usersTable */
         $usersTable = TableRegistry::getTableLocator()->get('Users');
         $users = $usersTable->find()->toArray();
         $io->out('Select the user you want to remove from your EuroKeep instance');
 
         $mapping = [];
-        foreach($users as $user) {
+        foreach ($users as $user) {
             $io->out(sprintf(
                     '%s: %s (%s)',
                     $user['id'],

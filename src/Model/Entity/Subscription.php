@@ -7,7 +7,7 @@ use Cake\Chronos\Chronos;
 use Cake\I18n\FrozenDate;
 use Cake\I18n\FrozenTime;
 use Cake\ORM\Entity;
-use \DateInterval;
+use DateInterval;
 
 
 /**

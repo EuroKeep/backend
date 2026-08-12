@@ -83,21 +83,6 @@ class Subscriptions extends AbstractMigration
                     'limit' => null,
                     'null' => true,
                 ])
-                ->addColumn('term', 'string', [
-                    'default' => null,
-                    'limit' => 128,
-                    'null' => true,
-                ])
-                ->addColumn('noticeperiod', 'string', [
-                    'default' => null,
-                    'limit' => 128,
-                    'null' => true,
-                ])
-                ->addColumn('comments', 'string', [
-                    'default' => null,
-                    'limit' => 128,
-                    'null' => true,
-                ])
                 ->addColumn('user_id', 'integer', [
                     'default' => 1,
                     'limit' => 10,

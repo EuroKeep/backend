@@ -3,9 +3,8 @@ declare(strict_types=1);
 
 namespace eurokeep\Controller;
 
+use Cake\Database\Expression\QueryExpression;
 use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\Datasource\ResultSetInterface;
-use eurokeep\Model\Entity\Account;
 use eurokeep\Model\Table\AccountTable;
 
 /**
@@ -18,35 +17,30 @@ class AccountController extends AuthenticatedController
 {
     public array $paginate = [
         'limit' => 100,
-        'maxLimit' => 100
+        'maxLimit' => 100,
     ];
+
     /**
      * Index method
-     *
      */
     public function index(): void
     {
         $this->request->allowMethod(['get']);
-        $accountQuery = $this
+        $query = $this
             ->Account
             ->find()
-            ->orderBy(['Account.name' => 'ASC']);
+            ->where(fn(QueryExpression $exp) => $exp->add('(flags & 1) <> 0'))
+            ->orderBy(fn(QueryExpression $exp, $q) => [
+                '(flags & 2)' => 'DESC',
+                'Account.name' => 'ASC',
+            ]);
 
-        $filters = $this->getRequest()->getQueryParams()['filter'] ?? [];
-        foreach ($filters as $fieldname => $value) {
-            $accountQuery->where(["$fieldname LIKE" => "$value%",]);
-        }
-
-        $account = $this->paginate($accountQuery);
-
-        $this->set('totalBalances', $this->user->getTotalBalances());
-        $this->set('items', $account);
-        $this->viewBuilder()->setOption('serialize', ['items', 'success', 'totalBalances']);
+        $this->set('items', $this->paginate($query));
+        $this->viewBuilder()->setOption('serialize', ['items', 'success']);
     }
 
     /**
      * Add method
-     *
      */
     public function add(): void
     {
@@ -55,114 +49,150 @@ class AccountController extends AuthenticatedController
         $this->viewBuilder()->setOption('serialize', ['success']);
 
         // Fetch data
-        $account = $this->request->getData();
-        $account['user_id'] = $this->user->id;
-        $account['balance_value'] = 0;
+        $data = $this->request->getData();
+        $data['user_id'] = $this->user->id;
+        $data['balance_value'] = 0;
+        $data['flags'] = 1;
 
         // Add the Account
         $entity = $this->Account->newEmptyEntity();
-        $entity = $this->Account->patchEntity($entity, $account);
+        $entity = $this->Account->patchEntity($entity, $data);
 
+        // Validate
         if ($entity->hasErrors()) {
             $this->response = $this->response->withStatus(400);
             $this->set('error', $entity->getErrors());
-            $this->viewBuilder()->setOption('serialize', ['error']);
+            $this->viewBuilder()->setOption('serialize', ['success', 'error']);
+
             return;
         }
-        $this->Account->save($entity);
+        // Save
+        if (!$this->Account->save($entity)) {
+            $this->response = $this->response->withStatus(500);
+            $this->set('success', false);
+            $this->set('error', 'Saving failed');
+            $this->viewBuilder()->setOption('serialize', ['success', 'error']);
 
-        $this->set('account', $entity);
-        $this->viewBuilder()->setOption('serialize', ['success', 'account']);
+            return;
+        }
+
+        $this->response = $this->response->withStatus(201);
+        $this->set('item', $entity);
+        $this->viewBuilder()->setOption('serialize', ['success', 'item']);
     }
 
     /**
      * View method
      *
-     * @param int|null $accountId Account id.
+     * @param int $entityId Identifier of the account.
      * @throws RecordNotFoundException When record not found.
      */
-    public function view(int|null $accountId = null): void
+    public function view(int $entityId): void
     {
         $this->request->allowMethod(['get']);
-        $account = $this->Account->get($accountId, [
-            'contain' => [],
-        ]);
 
-        $this->set('account', $account);
-        $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['account', 'success']);
+        try {
+            $this->set('item', $this->Account->get($entityId));
+            $this->set('success', true);
+        } catch (RecordNotFoundException) {
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('errors', ['Account not found']);
+        }
+
+        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
     }
-
 
     /**
      * Edit method
      *
-     * @param int|null $accountId Account id.
+     * @param int $entityId Identifier of the account.
      * @throws RecordNotFoundException When record not found.
      */
-    public function edit(int|null $accountId = null): void
+    public function edit(int $entityId): void
     {
         $this->request->allowMethod(['post']);
 
-        $account = $this->Account->get($accountId);
+        try {
+            $item = $this->Account->get($entityId);
 
-        // Check Ownership
-        if ($account->user_id !== $this->user->id) {
-            $this->http403('This account is not yours');
-        }
+            // Apply the new data
+            $item = $this
+                ->Account
+                ->patchEntity($item, $this->request->getData());
 
-        // Apply the new data
-        $account = $this
-            ->Account
-            ->patchEntity($account, $this->request->getData());
+            // Haz errors?
+            if ($item->hasErrors()) {
+                $this->response = $this->response->withStatus(400);
+                $this->set('error', $item->getErrors());
+                $this->viewBuilder()->setOption('serialize', ['error']);
 
-        // Haz errors?
-        if ($account->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('error', $account->getErrors());
-            $this->viewBuilder()->setOption('serialize', ['error']);
+                return;
+            }
+
+            // Cannot save?
+            if (!$this->Account->save($item)) {
+                $this->set('success', false);
+                $this->set('errors', ['Internal error']);
+            }
+            $this->set('item', $item);
+        } catch (RecordNotFoundException) {
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('errors', ['Account not found']);
+
+            $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
+
             return;
         }
 
-        // Cannot save?
-        if (!$this->Account->save($account)) {
-            $this->set('success', false);
-        }
-        $this->set(compact('account'));
+        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
     }
 
     /**
      * Delete method
      *
-     * @param int|null $accountId Account id.
+     * @param int $entityId Identifier of the account.
      * @throws RecordNotFoundException When record not found.
      */
-    public function delete(int|null $accountId = null): void
+    public function delete(int $entityId): void
     {
         $this->request->allowMethod(['delete']);
-        $account = $this->Account->get($accountId);
 
-        if (!$this->Account->delete($account)) {
+        try {
+            $entity = $this->Account->get($entityId);
+        } catch (RecordNotFoundException) {
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('errors', ['Account not found']);
+
+            $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
+
+            return;
+        }
+
+        if (!$this->Account->delete($entity)) {
             $this->addError('Error', 'Account not deleted.');
         }
     }
 
     /**
-     * @param int|null $accountId Account id.
+     * toggleFavourite method
+     *
+     * @param int $entityId Identifier of the account.
+     * @throws RecordNotFoundException When record not found.
      */
-    public function summarize(int|null $accountId = null): void
+    public function toggleFavourite(int $entityId): void
     {
-        $this->request->allowMethod(['get']);
-        if ($accountId) {
-            $accounts = [$this->Account->find()->where(['id' => $accountId])->first()];
-        } else {
-            $accounts = $this->Account->find()->all()->toArray();
-        }
-        foreach ($accounts as $account) {
-            $account->summarize();
-        }
-        $this->set('accounts', $accounts);
+        $this->request->allowMethod(['post']);
+        // Fetch & Toggle
+        $entity = $this->Account->get($entityId);
+        $entity->flags ^= 2;
+        $this->Account->save($entity);
+
+        // Response
+        $this->set('account', $entity);
         $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['accounts', 'success']);
+        $this->viewBuilder()->setOption('serialize', ['account', 'success']);
     }
 }

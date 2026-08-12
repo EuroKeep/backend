@@ -102,7 +102,7 @@ class Users extends AbstractMigration
                     'limit' => 128,
                     'null' => false,
                 ])
-                ->addColumn('ui_settings', 'json', [
+                ->addColumn('settings', 'json', [
                     'default' => '{}',
                     'null' => false,
                 ])

@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace eurokeep\Model\Entity;
 
-use eurokeep\Model\Table\AccountTable;
-use eurokeep\Model\Table\TransactionsTable;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use DateTime;
+use eurokeep\Model\Table\AccountTable;
+use eurokeep\Model\Table\TransactionsTable;
 
 /**
  * Account Entity
@@ -80,15 +80,15 @@ class Account extends Entity
     /**
      * Streamtransactions
      */
-    public function streamTransactions(DateTime $start, DateTime $end) : array
+    public function streamTransactions(DateTime $start, DateTime $end): array
     {
         $transactionsTable = TableRegistry::getTableLocator()->get('Transactions');
         return $transactionsTable
             ->find()
             ->contain(['Categories'])
             ->where([
-                'Transactions.created >=' => $start->format('Y-m-d'),
-                'Transactions.created <' => $end->format('Y-m-d'),
+                'Transactions.created >=' => $start,
+                'Transactions.created <' => $end,
                 'account_id' => $this->id
             ])
             ->order(['Transactions.created' => 'DESC'])
@@ -100,14 +100,15 @@ class Account extends Entity
     /**
      * Settlement
      */
-    public function settlement(array $transactions): array {
+    public function settlement(array $transactions): array
+    {
         $settlement = [
             'expenses' => 0,
             'revenues' => 0,
             'settlement' => 0
         ];
-        foreach($transactions as $transaction) {
-            if($transaction->balance_value < 0) {
+        foreach ($transactions as $transaction) {
+            if ($transaction->balance_value < 0) {
                 $settlement['expenses'] += $transaction->balance_value;
             } else {
                 $settlement['revenues'] += $transaction->balance_value;

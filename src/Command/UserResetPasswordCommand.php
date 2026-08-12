@@ -48,7 +48,7 @@ class UserResetPasswordCommand extends Command
         $io->out('Select the user of your EuroKeep instance, whose password will be reset.');
 
         $mapping = [];
-        foreach($users as $user) {
+        foreach ($users as $user) {
             $io->out(sprintf(
                     '%s: %s (%s)',
                     $user['id'],

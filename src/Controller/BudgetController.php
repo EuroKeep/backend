@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace eurokeep\Controller;
 
 use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\Datasource\ResultSetInterface;
 use eurokeep\Model\Entity\Budget;
 use eurokeep\Model\Table\BudgetTable;
 use eurokeep\Model\Table\TransactionsTable;
@@ -13,13 +12,12 @@ use eurokeep\Model\Table\TransactionsTable;
  * Budget Controller
  *
  * @property BudgetTable $Budget
- * @method Budget[]|ResultSetInterface paginate($object = null, array $settings = [])
+ * @method \eurokeep\Controller\Budget[]|ResultSetInterface paginate($object = null, array $settings = [])
  */
 class BudgetController extends AuthenticatedController
 {
     /**
      * Index method
-     *
      */
     public function index(): void
     {
@@ -28,7 +26,7 @@ class BudgetController extends AuthenticatedController
             ->Budget
             ->find();
         $budgetQuery->contain([
-            'Categories'
+            'Categories',
         ]);
 
         $filters = $this->getRequest()->getQueryParams()['filter'] ?? [];
@@ -69,6 +67,9 @@ class BudgetController extends AuthenticatedController
             $budget->category->transactions = $budget->getTransactions($start, $end);
             $budget->spent = TransactionsTable::summarize($budget->category->transactions);
 
+            // Type issue here
+            $budget->limit = (float)$budget->limit;
+
             $total['spentValue'] += round($budget->spent, 2);
             $total['total'] += $budget->limit;
         }
@@ -85,7 +86,6 @@ class BudgetController extends AuthenticatedController
 
     /**
      * Add method
-     *
      */
     public function add(): void
     {
@@ -104,6 +104,7 @@ class BudgetController extends AuthenticatedController
             $this->response = $this->response->withStatus(400);
             $this->set('error', $entity->getErrors());
             $this->viewBuilder()->setOption('serialize', ['error']);
+
             return;
         }
         $this->set('budget', $entity);
@@ -116,7 +117,7 @@ class BudgetController extends AuthenticatedController
      * @param int|null $budgetId Budget id.
      * @throws RecordNotFoundException When record not found.
      */
-    public function view(int|null $budgetId = null): void
+    public function view(?int $budgetId = null): void
     {
         $this->request->allowMethod(['get']);
         $budget = $this->Budget->get($budgetId, [
@@ -128,14 +129,13 @@ class BudgetController extends AuthenticatedController
         $this->viewBuilder()->setOption('serialize', ['budget', 'success']);
     }
 
-
     /**
      * Edit method
      *
      * @param int|null $budgetId Budget id.
      * @throws RecordNotFoundException When record not found.
      */
-    public function edit(int|null $budgetId = null): void
+    public function edit(?int $budgetId = null): void
     {
         $this->request->allowMethod(['post']);
         $budget = $this->Budget->get($budgetId);
@@ -152,7 +152,7 @@ class BudgetController extends AuthenticatedController
      * @param int|null $budgetId Budget id.
      * @throws RecordNotFoundException When record not found.
      */
-    public function delete(int|null $budgetId = null): void
+    public function delete(?int $budgetId = null): void
     {
         $this->request->allowMethod(['delete']);
         $budget = $this->Budget->get($budgetId);

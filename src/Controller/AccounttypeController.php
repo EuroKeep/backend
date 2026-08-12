@@ -20,7 +20,7 @@ class AccounttypeController extends AuthenticatedController
      * Index method
      *
      */
-    public function index() :void
+    public function index(): void
     {
         $this->request->allowMethod(['get']);
         $accounttypes = $this->paginate($this->Accounttype);
@@ -37,7 +37,7 @@ class AccounttypeController extends AuthenticatedController
      * @param int|null $accountTypeId Accounttype id.
      * @throws RecordNotFoundException When record not found.
      */
-    public function view(int | null $accountTypeId = null): void
+    public function view(int|null $accountTypeId = null): void
     {
         $this->request->allowMethod(['get']);
         $accounttype = $this->Accounttype->get($accountTypeId, [

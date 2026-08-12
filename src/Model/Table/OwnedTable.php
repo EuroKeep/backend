@@ -3,9 +3,13 @@ declare(strict_types=1);
 
 namespace eurokeep\Model\Table;
 
+use Cake\Datasource\EntityInterface;
+use Cake\Http\Exception\UnauthorizedException;
 use Cake\ORM\Table;
+use Closure;
 use eurokeep\Model\Behavior\UserOwnedBehavior;
 use Override;
+use Psr\SimpleCache\CacheInterface;
 
 /**
  * Account Model
@@ -14,7 +18,7 @@ use Override;
  */
 abstract class OwnedTable extends Table
 {
-    private static ?int $currentUserId = null;
+    public static ?int $currentUserId = -1;
 
     /**
      * Initialize method
@@ -38,5 +42,22 @@ abstract class OwnedTable extends Table
     public static function setCurrentUserId(?int $userId): void
     {
         self::$currentUserId = $userId;
+    }
+
+    /**
+     * This does the same as the cake ORM->get()
+     *
+     * But it also checks the ownership.
+     */
+    #[Override]
+    public function get(mixed $primaryKey, array|string $finder = 'all', CacheInterface|string|null $cache = null, string|Closure|null $cacheKey = null, ...$args): EntityInterface
+    {
+        $element = parent::get($primaryKey, $finder, $cache, $cacheKey, $args);
+
+        if ($element->has('user_id') && $element->get('user_id') !== self::$currentUserId) {
+            throw new UnauthorizedException('This is not yours.');
+        }
+
+        return $element;
     }
 }

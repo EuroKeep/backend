@@ -219,6 +219,11 @@ class Accounting extends AbstractMigration
                     'limit'   => 11,
                     'null'    => true,
                 ])
+                ->addColumn('transfer_id', 'integer', [
+                    'default' => null,
+                    'limit'   => 11,
+                    'null'    => true,
+                ])
                 ->addColumn('account_id', 'integer', [
                     'default' => null,
                     'limit'   => 11,
