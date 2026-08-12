@@ -5,13 +5,12 @@ namespace eurokeep\Controller;
 
 use Cake\Database\Expression\QueryExpression;
 use Cake\Datasource\Exception\RecordNotFoundException;
-use eurokeep\Model\Table\AccountTable;
 
 /**
  * Account Controller
  *
- * @property AccountTable $Account
- * @method Account[]|ResultSetInterface paginate($object = null, array $settings = [])
+ * @property \eurokeep\Model\Table\AccountTable $Account
+ * @method \eurokeep\Model\Entity\Account[]|\Cake\Datasource\ResultSetInterface paginate($object = null, array $settings = [])
  */
 class AccountController extends AuthenticatedController
 {
@@ -85,7 +84,7 @@ class AccountController extends AuthenticatedController
      * View method
      *
      * @param int $entityId Identifier of the account.
-     * @throws RecordNotFoundException When record not found.
+     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
     public function view(int $entityId): void
     {
@@ -107,7 +106,7 @@ class AccountController extends AuthenticatedController
      * Edit method
      *
      * @param int $entityId Identifier of the account.
-     * @throws RecordNotFoundException When record not found.
+     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
     public function edit(int $entityId): void
     {
@@ -153,7 +152,7 @@ class AccountController extends AuthenticatedController
      * Delete method
      *
      * @param int $entityId Identifier of the account.
-     * @throws RecordNotFoundException When record not found.
+     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
     public function delete(int $entityId): void
     {
@@ -180,7 +179,7 @@ class AccountController extends AuthenticatedController
      * toggleFavourite method
      *
      * @param int $entityId Identifier of the account.
-     * @throws RecordNotFoundException When record not found.
+     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
     public function toggleFavourite(int $entityId): void
     {
