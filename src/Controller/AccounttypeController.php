@@ -80,33 +80,72 @@ class AccounttypeController extends AuthenticatedController
     /**
      * Edit method
      *
-     * @param int|null $accountTypeId Accounttype id.
-     * @throws RecordNotFoundException When record not found.
+     * @param mixed $accountTypeId Identifier of the accounttype. Not type-hinted so that a
+     *   missing or non-numeric route segment can be reported as a normal 400 response instead
+     *   of an uncaught ArgumentCountError/TypeError.
      */
-    public function edit(int|null $accountTypeId = null): void
+    public function edit($accountTypeId = null): void
     {
         $this->request->allowMethod(['post']);
+        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
 
-        $accounttype = $this->Accounttype->get($accountTypeId);
+        // Missing or non-numeric identifier
+        if (!ctype_digit((string)$accountTypeId)) {
+            $this->response = $this->response->withStatus(400);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('errors', ['Missing or invalid accounttype id']);
+
+            return;
+        }
+
+        // Malformed JSON / non-object body (BodyParserMiddleware returns null on invalid JSON)
+        $data = $this->request->getData();
+        if (!is_array($data)) {
+            $this->response = $this->response->withStatus(400);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('errors', ['Invalid JSON body']);
+
+            return;
+        }
+
+        try {
+            $item = $this->Accounttype->get((int)$accountTypeId);
+        } catch (RecordNotFoundException) {
+            $this->response = $this->response->withStatus(404);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('errors', ['Accounttype not found']);
+
+            return;
+        }
 
         // Apply the new data
-        $accounttype = $this
-            ->Accounttype
-            ->patchEntity($accounttype, $this->request->getData());
+        $item = $this->Accounttype->patchEntity($item, $data);
 
         // Haz errors?
-        if ($accounttype->hasErrors()) {
+        if ($item->hasErrors()) {
             $this->response = $this->response->withStatus(400);
-            $this->set('error', $accounttype->getErrors());
-            $this->viewBuilder()->setOption('serialize', ['error']);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('errors', $item->getErrors());
+
             return;
         }
 
         // Cannot save?
-        if (!$this->Accounttype->save($accounttype)) {
+        if (!$this->Accounttype->save($item)) {
+            $this->response = $this->response->withStatus(500);
+            $this->set('item');
             $this->set('success', false);
+            $this->set('errors', ['Internal error']);
+
+            return;
         }
-        $this->set(compact('accounttype'));
+
+        $this->set('item', $item);
+        $this->set('success', true);
     }
 
     /**

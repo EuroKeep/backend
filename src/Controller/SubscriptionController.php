@@ -96,30 +96,72 @@ class SubscriptionController extends AuthenticatedController
     /**
      * Edit method
      *
-     * @param int|null $subscriptionId Subscription id.
-     * @throws RecordNotFoundException When record not found.
+     * @param mixed $subscriptionId Identifier of the subscription. Not type-hinted so that a
+     *   missing or non-numeric route segment can be reported as a normal 400 response instead
+     *   of an uncaught ArgumentCountError/TypeError.
      */
-    public function edit(?int $subscriptionId = null): void
+    public function edit($subscriptionId = null): void
     {
         $this->request->allowMethod(['post']);
-        $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['success']);
+        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
 
-        $entity = $this->Subscription->get($subscriptionId);
-        $entity = $this->Subscription->patchEntity($entity, $this->request->getData());
-
-        if ($entity->hasErrors()) {
+        // Missing or non-numeric identifier
+        if (!ctype_digit((string)$subscriptionId)) {
             $this->response = $this->response->withStatus(400);
-            $this->set('error', $entity->getErrors());
-            $this->viewBuilder()->setOption('serialize', ['error']);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('errors', ['Missing or invalid subscription id']);
 
             return;
         }
-        if (!$this->Subscription->save($entity)) {
+
+        // Malformed JSON / non-object body (BodyParserMiddleware returns null on invalid JSON)
+        $data = $this->request->getData();
+        if (!is_array($data)) {
+            $this->response = $this->response->withStatus(400);
+            $this->set('item');
             $this->set('success', false);
+            $this->set('errors', ['Invalid JSON body']);
+
+            return;
         }
-        $this->set('subscription', $entity);
-        $this->viewBuilder()->setOption('serialize', ['success', 'subscription']);
+
+        try {
+            $item = $this->Subscription->get((int)$subscriptionId);
+        } catch (RecordNotFoundException) {
+            $this->response = $this->response->withStatus(404);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('errors', ['Subscription not found']);
+
+            return;
+        }
+
+        // Apply the new data
+        $item = $this->Subscription->patchEntity($item, $data);
+
+        // Haz errors?
+        if ($item->hasErrors()) {
+            $this->response = $this->response->withStatus(400);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('errors', $item->getErrors());
+
+            return;
+        }
+
+        // Cannot save?
+        if (!$this->Subscription->save($item)) {
+            $this->response = $this->response->withStatus(500);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('errors', ['Internal error']);
+
+            return;
+        }
+
+        $this->set('item', $item);
+        $this->set('success', true);
     }
 
     /**
