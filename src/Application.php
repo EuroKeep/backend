@@ -30,6 +30,8 @@ use Cake\Http\MiddlewareQueue;
 use Cake\ORM\Locator\TableLocator;
 use Cake\Routing\Middleware\RoutingMiddleware;
 use Cake\Routing\Router;
+use eurokeep\Authenticator\ApikeyAuthenticator;
+use eurokeep\Identifier\ApikeyIdentifier;
 use Override;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -63,13 +65,13 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
         /*
          * Only try to load DebugKit in development mode
          * Debug Kit should not be installed on a production system
-         */
         if (Configure::read('debug')) {
             Configure::write('DebugKit.panels', ['DebugKit.Packages' => true]);
             Configure::write('DebugKit.safeTld', ['playground.nox.kiwi']);
             Configure::write('DebugKit.forceEnable', true);
             $this->addPlugin('DebugKit');
         }
+         */
 
         // Load more plugins here
     }
@@ -87,7 +89,8 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
             ->add(new ErrorHandlerMiddleware(Configure::read('Error'), $this))
             ->add(new RoutingMiddleware($this))
             ->add(new BodyParserMiddleware())
-            ->add(new AuthenticationMiddleware($this))#            ->add(new CsrfProtectionMiddleware())
+            ->add(new AuthenticationMiddleware($this))
+            #->add(new CsrfProtectionMiddleware())
         ;
         return $middlewareQueue;
     }
@@ -116,6 +119,17 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
         ]);
 
         // Load the authenticators, you want session first
+        $authenticationService->loadAuthenticator('Authentication.Apikey', [
+            'identifier' => [
+                'className' => ApikeyIdentifier::class,
+            ],
+            'className' => ApikeyAuthenticator::class,
+            'queryParam' => 'apikey',
+            'header' => 'Authorization',
+            'apikeyPrefix' => 'X-EUROKEEP-API'
+
+        ]);
+        // Load the authenticators, you want session first
         $authenticationService->loadAuthenticator('Authentication.Session');
         // Configure form data check to pick email and password
         $authenticationService->loadAuthenticator('Authentication.Form', [
@@ -125,11 +139,10 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
             ],
             'loginUrl' => Router::url('/auth/login'),
             'identifier' => [
-                'Authentication.Password' => [
-                    'fields' => [
-                        'username' => 'email',
-                        'password' => 'password',
-                    ],
+                'className' => 'Authentication.Password',
+                'fields' => [
+                    'username' => 'email',
+                    'password' => 'password',
                 ],
             ],
         ]);

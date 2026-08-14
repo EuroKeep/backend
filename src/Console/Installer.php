@@ -14,6 +14,7 @@ declare(strict_types=1);
  * @since     3.0.0
  * @license   https://opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace eurokeep\Console;
 
 if (!defined('STDIN')) {
@@ -50,8 +51,8 @@ class Installer
      * Does some routine installation tasks so people don't have to.
      *
      * @param Event $event The composer event object.
-     * @throws Exception Exception raised by validator.
      * @return void
+     * @throws Exception Exception raised by validator.
      */
     public static function postInstall(Event $event)
     {

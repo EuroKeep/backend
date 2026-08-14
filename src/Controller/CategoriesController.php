@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace eurokeep\Controller;
 
-use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\Http\Response;
 use eurokeep\Model\Table\CategoriesTable;
 
 /**
@@ -43,34 +41,25 @@ class CategoriesController extends AuthenticatedController
     /**
      * View method
      *
-     * @param int $entityId Identifier of the Category.
-     * @throws \eurokeep\Controller\RecordNotFoundException When record not found.
+     * @param mixed $entityId Identifier of the Category. Not type-hinted so that a missing or
+     *   non-numeric route segment can be reported as a normal 400 response instead of an
+     *   uncaught ArgumentCountError/TypeError.
      */
-    public function view(int $entityId): void
+    public function view($entityId = null): void
     {
         $this->request->allowMethod(['get']);
         $this->Categories->recover();
-        $category = $this->Categories->get($entityId, contain: ['Budget', 'Transactions', 'Subscription']);
-        $this->set(compact('category'));
+        $this->viewEntity($this->Categories, $entityId, 'Category', ['contain' => ['Budget', 'Transactions', 'Subscription']]);
     }
 
     /**
      * Add method
-     *
-     * @return Response|null|void Redirects on successful add, renders view otherwise.
      */
-    public function add()
+    public function add(): void
     {
         $this->request->allowMethod(['post']);
-        $category = $this->Categories->newEmptyEntity();
-        $category = $this->Categories->patchEntity($category, $this->request->getData());
-        if ($this->Categories->save($category)) {
-            $this->Flash->success(__('The category has been saved.'));
-
-            return $this->redirect(['action' => 'index']);
-        }
-        $this->Flash->error(__('The category could not be saved. Please, try again.'));
-        $this->set(compact('category'));
+        $this->Categories->recover();
+        $this->addEntity($this->Categories);
     }
 
     /**
@@ -82,36 +71,23 @@ class CategoriesController extends AuthenticatedController
      */
     public function edit($entityId = null): void
     {
-        $this->request->allowMethod(['post']);
-        $this->Categories->recover();
+        $this->request->allowMethod(['patch', 'put']);
         $this->editEntity($this->Categories, $entityId, 'Category', ['contain' => []]);
+        $this->Categories->recover();
     }
 
     /**
      * Delete method
      *
-     * @param int $entityId Identifier of the Category.
-     * @throws RecordNotFoundException When record not found.
+     * @param mixed $entityId Identifier of the Category. Not type-hinted so that a missing or
+     *   non-numeric route segment can be reported as a normal 400 response instead of an
+     *   uncaught ArgumentCountError/TypeError.
      */
-    public function delete(int $entityId): void
+    public function delete($entityId = null): void
     {
         $this->request->allowMethod(['delete']);
-
-        try {
-            $entity = $this->Categories->get($entityId);
-        } catch (RecordNotFoundException) {
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Category not found']);
-
-            $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
-
-            return;
-        }
-
-        if (!$this->Categories->delete($entity)) {
-            $this->addError('Error', 'Category not deleted.');
-        }
+        $this->Categories->recover();
+        $this->deleteEntity($this->Categories, $entityId, 'Category');
     }
 
     /**

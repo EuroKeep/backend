@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace eurokeep\Controller;
 
 use Cake\Database\Expression\QueryExpression;
-use Cake\Datasource\Exception\RecordNotFoundException;
 
 /**
  * Account Controller
@@ -44,62 +43,24 @@ class AccountController extends AuthenticatedController
     public function add(): void
     {
         $this->request->allowMethod(['post']);
-        $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['success']);
-
-        // Fetch data
-        $data = $this->request->getData();
-        $data['user_id'] = $this->user->id;
-        $data['balance_value'] = 0;
-        $data['flags'] = 1;
-
-        // Add the Account
-        $entity = $this->Account->newEmptyEntity();
-        $entity = $this->Account->patchEntity($entity, $data);
-
-        // Validate
-        if ($entity->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('error', $entity->getErrors());
-            $this->viewBuilder()->setOption('serialize', ['success', 'error']);
-
-            return;
-        }
-        // Save
-        if (!$this->Account->save($entity)) {
-            $this->response = $this->response->withStatus(500);
-            $this->set('success', false);
-            $this->set('error', 'Saving failed');
-            $this->viewBuilder()->setOption('serialize', ['success', 'error']);
-
-            return;
-        }
-
-        $this->response = $this->response->withStatus(201);
-        $this->set('item', $entity);
-        $this->viewBuilder()->setOption('serialize', ['success', 'item']);
+        $this->addEntity($this->Account, [
+            'user_id' => $this->user->id,
+            'balance_value' => 0,
+            'flags' => 1,
+        ]);
     }
 
     /**
      * View method
      *
-     * @param int $entityId Identifier of the account.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
+     * @param mixed $entityId Identifier of the account. Not type-hinted so that a missing or
+     *   non-numeric route segment can be reported as a normal 400 response instead of an
+     *   uncaught ArgumentCountError/TypeError.
      */
-    public function view(int $entityId): void
+    public function view($entityId = null): void
     {
         $this->request->allowMethod(['get']);
-
-        try {
-            $this->set('item', $this->Account->get($entityId));
-            $this->set('success', true);
-        } catch (RecordNotFoundException) {
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Account not found']);
-        }
-
-        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
+        $this->viewEntity($this->Account, $entityId, 'Account');
     }
 
     /**
@@ -111,35 +72,21 @@ class AccountController extends AuthenticatedController
      */
     public function edit($entityId = null): void
     {
-        $this->request->allowMethod(['post']);
+        $this->request->allowMethod(['patch', 'put']);
         $this->editEntity($this->Account, $entityId, 'Account');
     }
 
     /**
      * Delete method
      *
-     * @param int $entityId Identifier of the account.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
+     * @param mixed $entityId Identifier of the account. Not type-hinted so that a missing or
+     *   non-numeric route segment can be reported as a normal 400 response instead of an
+     *   uncaught ArgumentCountError/TypeError.
      */
-    public function delete(int $entityId): void
+    public function delete($entityId = null): void
     {
         $this->request->allowMethod(['delete']);
-
-        try {
-            $entity = $this->Account->get($entityId);
-        } catch (RecordNotFoundException) {
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('errors', ['Account not found']);
-
-            $this->viewBuilder()->setOption('serialize', ['item', 'success', 'errors']);
-
-            return;
-        }
-
-        if (!$this->Account->delete($entity)) {
-            $this->addError('Error', 'Account not deleted.');
-        }
+        $this->deleteEntity($this->Account, $entityId, 'Account');
     }
 
     /**
@@ -157,8 +104,8 @@ class AccountController extends AuthenticatedController
         $this->Account->save($entity);
 
         // Response
-        $this->set('account', $entity);
+        $this->set('item', $entity);
         $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['account', 'success']);
+        $this->viewBuilder()->setOption('serialize', ['item', 'success']);
     }
 }

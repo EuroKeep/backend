@@ -14,11 +14,10 @@ declare(strict_types=1);
  * @since         3.3.4
  * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace eurokeep\Controller;
 
 use Cake\Event\EventInterface;
-use Cake\Http\Response;
-use Exception;
 use Override;
 
 /**
@@ -30,7 +29,7 @@ class ErrorController extends AppController
 {
     /**
      * @return void
-     * @throws Exception
+     * @throws \Exception
      */
     #[Override]
     public function initialize(): void
@@ -41,8 +40,8 @@ class ErrorController extends AppController
     /**
      * beforeFilter callback.
      *
-     * @param EventInterface<ErrorController> $event Event.
-     * @return Response|null|void
+     * @param \Cake\Event\EventInterface<\eurokeep\Controller\ErrorController> $event Event.
+     * @return void
      */
     #[Override]
     public function beforeFilter(EventInterface $event)
@@ -52,8 +51,8 @@ class ErrorController extends AppController
     /**
      * beforeRender callback.
      *
-     * @param EventInterface<ErrorController> $event Event.
-     * @return Response|null|void
+     * @param \Cake\Event\EventInterface<\eurokeep\Controller\ErrorController> $event Event.
+     * @return void
      */
     #[Override]
     public function beforeRender(EventInterface $event): void
@@ -62,5 +61,4 @@ class ErrorController extends AppController
 
         $this->viewBuilder()->setTemplatePath('Error');
     }
-
 }

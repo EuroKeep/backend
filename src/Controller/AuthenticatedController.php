@@ -18,7 +18,10 @@ declare(strict_types=1);
 namespace eurokeep\Controller;
 
 use Authentication\AuthenticationService;
+use Cake\Database\Exception\QueryException;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Http\Exception\ForbiddenException;
+use Cake\Http\Exception\UnauthorizedException;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use eurokeep\Model\Entity\User;
@@ -168,6 +171,200 @@ class AuthenticatedController extends AppController
         }
 
         $this->set('item', $item);
+        $this->set('success', true);
+    }
+
+    /**
+     * I am the generic "view" JSON API action shared by all CRUD controllers.
+     *
+     * I validate the identifier and load the entity. Missing parameters, missing entities and
+     * authorization failures are reported as normal JSON responses (400/401/403/404) instead
+     * of uncaught exceptions.
+     *
+     * @param Table $table The Table to load the entity through.
+     * @param mixed $id The (route) identifier of the entity. Deliberately not type-hinted at
+     *   the call site (the action's own parameter) so that a missing or non-numeric value can
+     *   be reported as a 400 instead of an ArgumentCountError/TypeError.
+     * @param string $resourceName Human-readable name used in the "not found"/"missing id"
+     *   error messages, e.g. 'Account'.
+     * @param array $getOptions Options passed through to Table::get(), e.g. ['contain' => []].
+     */
+    final protected function viewEntity(Table $table, mixed $id, string $resourceName, array $getOptions = []): void
+    {
+        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'error']);
+
+        // Missing or non-numeric identifier
+        if (!ctype_digit((string)$id)) {
+            $this->response = $this->response->withStatus(400);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ["Missing or invalid $resourceName id"]);
+
+            return;
+        }
+
+        try {
+            $item = $table->get((int)$id, $getOptions);
+        } catch (RecordNotFoundException) {
+            $this->response = $this->response->withStatus(404);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ["$resourceName not found"]);
+
+            return;
+        } catch (UnauthorizedException) {
+            $this->response = $this->response->withStatus(401);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ["Not authorized to view this $resourceName"]);
+
+            return;
+        } catch (ForbiddenException) {
+            $this->response = $this->response->withStatus(403);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ["Access to this $resourceName is forbidden"]);
+
+            return;
+        }
+
+        $this->set('item', $item);
+        $this->set('success', true);
+    }
+
+    /**
+     * I am the generic "add" JSON API action shared by all CRUD controllers.
+     *
+     * I validate the request body, create and validate a new entity, then save it. Invalid
+     * JSON input is reported as a normal JSON response (400) instead of an uncaught exception.
+     *
+     * @param Table $table The Table to create/save the entity through.
+     * @param array $extraData Field values forced onto the request body before patching,
+     *   taking precedence over anything the client sent, e.g. ['user_id' => $this->user->id]
+     *   for server-controlled fields that must not be trusted from client input.
+     */
+    final protected function addEntity(Table $table, array $extraData = []): void
+    {
+        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'error']);
+
+        // Malformed JSON / non-object body (BodyParserMiddleware returns null on invalid JSON)
+        $data = $this->request->getData();
+        if (!is_array($data)) {
+            $this->response = $this->response->withStatus(400);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ['Invalid JSON body']);
+
+            return;
+        }
+
+        $item = $table->newEmptyEntity();
+        $item = $table->patchEntity($item, $extraData + $data);
+
+        // Haz errors?
+        if ($item->hasErrors()) {
+            $this->response = $this->response->withStatus(400);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', $item->getErrors());
+
+            return;
+        }
+
+        // Cannot save?
+        if (!$table->save($item)) {
+            $this->response = $this->response->withStatus(500);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ['Internal error']);
+
+            return;
+        }
+
+        $this->response = $this->response->withStatus(201);
+        $this->set('item', $item);
+        $this->set('success', true);
+    }
+
+    /**
+     * I am the generic "delete" JSON API action shared by all CRUD controllers.
+     *
+     * I validate the identifier, load the entity and delete it. Missing parameters, missing
+     * entities and authorization failures are reported as normal JSON responses
+     * (400/401/403/404) instead of uncaught exceptions.
+     *
+     * @param Table $table The Table to load/delete the entity through.
+     * @param mixed $id The (route) identifier of the entity. Deliberately not type-hinted at
+     *   the call site (the action's own parameter) so that a missing or non-numeric value can
+     *   be reported as a 400 instead of an ArgumentCountError/TypeError.
+     * @param string $resourceName Human-readable name used in the "not found"/"missing id"/
+     *   "not deleted" error messages, e.g. 'Account'.
+     * @param array $getOptions Options passed through to Table::get(), e.g. ['contain' => []].
+     */
+    final protected function deleteEntity(Table $table, mixed $id, string $resourceName, array $getOptions = []): void
+    {
+        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'error']);
+
+        // Missing or non-numeric identifier
+        if (!ctype_digit((string)$id)) {
+            $this->response = $this->response->withStatus(400);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ["Missing or invalid $resourceName id"]);
+
+            return;
+        }
+
+        try {
+            $item = $table->get((int)$id, $getOptions);
+        } catch (RecordNotFoundException) {
+            $this->response = $this->response->withStatus(404);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ["$resourceName not found"]);
+
+            return;
+        } catch (UnauthorizedException) {
+            $this->response = $this->response->withStatus(401);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ["Not authorized to delete this $resourceName"]);
+
+            return;
+        } catch (ForbiddenException) {
+            $this->response = $this->response->withStatus(403);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ["Access to this $resourceName is forbidden"]);
+
+            return;
+        }
+
+        // Cannot delete?
+        try {
+            $deleted = $table->delete($item);
+        } catch (QueryException) {
+            // Thrown when the DB rejects the delete because another record still
+            // references this one via a RESTRICT foreign key (e.g. a Role that still
+            // has Users, or an Accounttype that still has Accounts).
+            $this->response = $this->response->withStatus(409);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ["$resourceName cannot be deleted: still referenced by other records"]);
+
+            return;
+        }
+
+        if (!$deleted) {
+            $this->response = $this->response->withStatus(500);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', ["$resourceName not deleted"]);
+
+            return;
+        }
+
+        $this->set('item');
         $this->set('success', true);
     }
 }

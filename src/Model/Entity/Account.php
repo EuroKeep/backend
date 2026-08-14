@@ -91,7 +91,7 @@ class Account extends Entity
                 'Transactions.created <' => $end,
                 'account_id' => $this->id
             ])
-            ->order(['Transactions.created' => 'DESC'])
+            ->orderByDesc('Transactions.created')
             ->limit(250)
             ->toArray();
 

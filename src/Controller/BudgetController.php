@@ -3,16 +3,13 @@ declare(strict_types=1);
 
 namespace eurokeep\Controller;
 
-use Cake\Datasource\Exception\RecordNotFoundException;
-use eurokeep\Model\Entity\Budget;
-use eurokeep\Model\Table\BudgetTable;
 use eurokeep\Model\Table\TransactionsTable;
 
 /**
  * Budget Controller
  *
- * @property BudgetTable $Budget
- * @method \eurokeep\Controller\Budget[]|ResultSetInterface paginate($object = null, array $settings = [])
+ * @property \eurokeep\Model\Table\BudgetTable $Budget
+ * @method \eurokeep\Controller\Budget[]|\eurokeep\Controller\ResultSetInterface paginate($object = null, array $settings = [])
  */
 class BudgetController extends AuthenticatedController
 {
@@ -41,11 +38,9 @@ class BudgetController extends AuthenticatedController
         $this->viewBuilder()->setOption('serialize', ['items', 'success']);
     }
 
-    /**
-     * I will list the Budgets for the API
-     */
-    public function list(): void
+    public function total(): void
     {
+
         $this->request->allowMethod(['get']);
         [$start, $end] = $this->getRange();
 
@@ -53,7 +48,7 @@ class BudgetController extends AuthenticatedController
             ->Budget
             ->find()
             ->contain(['Categories']);
-        $budgets = $budgetQuery->all()->toArray();
+        $items = $budgetQuery->all()->toArray();
 
         // TOTALS
         $total = [
@@ -62,8 +57,8 @@ class BudgetController extends AuthenticatedController
             'freeValue' => 0,
         ];
 
-        /** @var Budget $budget */
-        foreach ($budgets as $budget) {
+        /** @var \eurokeep\Model\Entity\Budget $budget */
+        foreach ($items as $budget) {
             $budget->category->transactions = $budget->getTransactions($start, $end);
             $budget->spent = TransactionsTable::summarize($budget->category->transactions);
 
@@ -78,10 +73,37 @@ class BudgetController extends AuthenticatedController
         $total['spentPercent'] = min(100, round((-$total['spentValue']) / $total['total'] * 100, 2));
         $total['freePercent'] = 100 - $total['spentPercent'];
 
-        $this->set('budgets', $budgets);
-        $this->set('total', $total);
+        $this->set('item', $total);
         $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['budgets', 'success', 'total']);
+        $this->viewBuilder()->setOption('serialize', ['success', 'item']);
+    }
+
+    /**
+     * I will list the Budgets for the API
+     */
+    public function list(): void
+    {
+        $this->request->allowMethod(['get']);
+        [$start, $end] = $this->getRange();
+
+        $budgetQuery = $this
+            ->Budget
+            ->find()
+            ->contain(['Categories']);
+        $items = $budgetQuery->all()->toArray();
+
+        /** @var \eurokeep\Model\Entity\Budget $budget */
+        foreach ($items as $budget) {
+            $budget->category->transactions = $budget->getTransactions($start, $end);
+            $budget->spent = TransactionsTable::summarize($budget->category->transactions);
+
+            // Type issue here
+            $budget->limit = (float)$budget->limit;
+        }
+
+        $this->set('items', $items);
+        $this->set('success', true);
+        $this->viewBuilder()->setOption('serialize', ['items', 'success', 'total']);
     }
 
     /**
@@ -90,43 +112,20 @@ class BudgetController extends AuthenticatedController
     public function add(): void
     {
         $this->request->allowMethod(['post']);
-        $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['success']);
-
-        $data = $this->request->getData();
-        $data['user_id'] = $this->user->id;
-        $budgetTable = $this->Budget;
-        $entity = $budgetTable->newEmptyEntity();
-        $entity = $budgetTable->patchEntity($entity, $data);
-        $budgetTable->save($entity);
-
-        if ($entity->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('error', $entity->getErrors());
-            $this->viewBuilder()->setOption('serialize', ['error']);
-
-            return;
-        }
-        $this->set('budget', $entity);
-        $this->viewBuilder()->setOption('serialize', ['success', 'budget']);
+        $this->addEntity($this->Budget, ['user_id' => $this->user->id]);
     }
 
     /**
      * View method
      *
-     * @param int|null $budgetId Budget id.
-     * @throws RecordNotFoundException When record not found.
+     * @param mixed $budgetId Identifier of the budget. Not type-hinted so that a missing or
+     *   non-numeric route segment can be reported as a normal 400 response instead of an
+     *   uncaught ArgumentCountError/TypeError.
      */
-    public function view(?int $budgetId = null): void
+    public function view($budgetId = null): void
     {
         $this->request->allowMethod(['get']);
-        $budget = $this->Budget->get($budgetId, [
-            'contain' => [],
-        ]);
-
-        $this->set('budget', $budget);
-        $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['budget', 'success']);
+        $this->viewEntity($this->Budget, $budgetId, 'Budget', ['contain' => []]);
     }
 
     /**
@@ -138,27 +137,22 @@ class BudgetController extends AuthenticatedController
      */
     public function edit($budgetId = null): void
     {
-        $this->request->allowMethod(['post']);
+        $this->request->allowMethod(['patch', 'PUT']);
         $this->editEntity($this->Budget, $budgetId, 'Budget');
     }
 
     /**
      * Delete method
      *
-     * @param int|null $budgetId Budget id.
-     * @throws RecordNotFoundException When record not found.
+     * @param mixed $budgetId Identifier of the budget. Not type-hinted so that a missing or
+     *   non-numeric route segment can be reported as a normal 400 response instead of an
+     *   uncaught ArgumentCountError/TypeError. Ownership is enforced by
+     *   OwnedTable::get() (throws UnauthorizedException, caught as a 401 by deleteEntity()),
+     *   so no separate ownership check is needed here.
      */
-    public function delete(?int $budgetId = null): void
+    public function delete($budgetId = null): void
     {
         $this->request->allowMethod(['delete']);
-        $budget = $this->Budget->get($budgetId);
-
-        if ($budget->user_id !== $this->user->id) {
-            $this->http401('This is not your budget.');
-        }
-
-        if (!$this->Budget->delete($budget)) {
-            $this->addError('Error', 'Budget not deleted.');
-        }
+        $this->deleteEntity($this->Budget, $budgetId, 'Budget');
     }
 }

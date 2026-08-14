@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace eurokeep\Controller;
 
 use Cake\Chronos\Chronos;
-use Cake\Datasource\Exception\RecordNotFoundException;
 use eurokeep\Model\Entity\Subscription;
 use eurokeep\Model\Table\SubscriptionTable;
 use JetBrains\PhpStorm\ObjectShape;
@@ -43,27 +42,22 @@ class SubscriptionController extends AuthenticatedController
             ->paginate($qry);
 
         $this->set(compact('subscriptions'));
-        $this->set('subscriptions', $subscriptions);
+        $this->set('items', $subscriptions);
         $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['subscriptions', 'success']);
+        $this->viewBuilder()->setOption('serialize', ['items', 'success']);
     }
 
     /**
      * View method
      *
-     * @param int|null $subscriptionId Subscription id.
-     * @throws RecordNotFoundException When record not found.
+     * @param mixed $subscriptionId Identifier of the subscription. Not type-hinted so that a
+     *   missing or non-numeric route segment can be reported as a normal 400 response instead
+     *   of an uncaught ArgumentCountError/TypeError.
      */
-    public function view(?int $subscriptionId = null): void
+    public function view($subscriptionId = null): void
     {
         $this->request->allowMethod(['get']);
-        $subscription = $this->Subscription->get($subscriptionId, [
-            'contain' => [],
-        ]);
-
-        $this->set('subscription', $subscription);
-        $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['subscription', 'success']);
+        $this->viewEntity($this->Subscription, $subscriptionId, 'Subscription', ['contain' => []]);
     }
 
     /**
@@ -72,25 +66,7 @@ class SubscriptionController extends AuthenticatedController
     public function add(): void
     {
         $this->request->allowMethod(['post']);
-        $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['success']);
-
-        $data = $this->request->getData();
-        $data['user_id'] = $this->user->id;
-        $subscriptionTable = $this->Subscription;
-        $entity = $subscriptionTable->newEmptyEntity();
-        $entity = $subscriptionTable->patchEntity($entity, $data);
-        $subscriptionTable->save($entity);
-
-        if ($entity->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('error', $entity->getErrors());
-            $this->viewBuilder()->setOption('serialize', ['error']);
-
-            return;
-        }
-        $this->set('subscription', $entity);
-        $this->viewBuilder()->setOption('serialize', ['success', 'account']);
+        $this->addEntity($this->Subscription, ['user_id' => $this->user->id]);
     }
 
     /**
@@ -102,22 +78,21 @@ class SubscriptionController extends AuthenticatedController
      */
     public function edit($subscriptionId = null): void
     {
-        $this->request->allowMethod(['post']);
+        $this->request->allowMethod(['patch', 'put']);
         $this->editEntity($this->Subscription, $subscriptionId, 'Subscription');
     }
 
     /**
      * Delete method
      *
-     * @param int|null $subscriptionId Subscription id.
+     * @param mixed $subscriptionId Identifier of the subscription. Not type-hinted so that a
+     *   missing or non-numeric route segment can be reported as a normal 400 response instead
+     *   of an uncaught ArgumentCountError/TypeError.
      */
-    public function delete(?int $subscriptionId = null): void
+    public function delete($subscriptionId = null): void
     {
         $this->request->allowMethod(['delete']);
-        $subscription = $this->Subscription->get($subscriptionId);
-        if (!$this->Subscription->delete($subscription)) {
-            $this->addError('Subscription not deleted');
-        }
+        $this->deleteEntity($this->Subscription, $subscriptionId, 'Subscription');
     }
 
     /**
