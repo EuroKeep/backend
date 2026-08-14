@@ -5,23 +5,21 @@
     "type": "project",
     "license": "MIT",
     "require": {
-        "php": ">=8.3",
-        "cakephp/cakephp": "^5.0.11",
-        "cakephp/migrations": "^4.9.5",
-        "cakephp/authentication": "3.3.4",
-        "cakephp/plugin-installer": "^2.0.1",
-        "mobiledetect/mobiledetectlib": "^3.74"
+        "php": ">=8.5",
+        "cakephp/cakephp": "^5.3.0",
+        "cakephp/migrations": "^5.2.6",
+        "cakephp/authentication": "^4.2.1",
+        "cakephp/plugin-installer": "^2.0.2",
+        "mobiledetect/mobiledetectlib": "^4.11.0"
     },
     "require-dev": {
-        "cakephp/bake": "^3.6.0",
-        "cakephp/cakephp-codesniffer": "^5.1.4",
-        "cakephp/debug_kit": "^5.2.1",
-        "josegonzalez/dotenv": "^4.0",
-        "phpstan/phpstan": "^2.2",
-        "phpstan/phpstan-deprecation-rules": "^2.0",
-        "phpstan/phpstan-phpunit": "^2.0",
-        "phpstan/phpstan-strict-rules": "^2.0",
-        "phpunit/phpunit": "^9.6",
+        "cakephp/bake": "^3.8.1",
+        "cakephp/cakephp-codesniffer": "^5.3.1",
+        "cakephp/debug_kit": "^5.2.4",
+        "phpstan/phpstan": "^2.2.8",
+        "phpstan/phpstan-deprecation-rules": "^2.0.5",
+        "phpstan/phpstan-strict-rules": "^2.0.12",
+        "phpunit/phpunit": "^13.3.1",
         "squizlabs/php_codesniffer": "^4.0.4"
     },
     "suggest": {
@@ -48,7 +46,6 @@
             "@test",
             "@cs-check"
         ],
-        "cs-check": "phpcs --colors -p",
         "cs-fix": "phpcbf --colors -p",
         "test": "phpunit --colors=always"
     },
