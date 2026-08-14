@@ -1,7 +1,10 @@
-vendor/*
 
 logs/*
 tmp/*
 .idea/*
 
 frontend/*
+
+# Composer Stuff
+vendor/*
+.composer/*
