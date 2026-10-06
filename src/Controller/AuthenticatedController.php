@@ -118,33 +118,21 @@ class AuthenticatedController extends AppController
 
         // Missing or non-numeric identifier
         if (!ctype_digit((string)$id)) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ["Missing or invalid $resourceName id"]);
-
+            $this->fail(400, "Missing or invalid $resourceName id");
             return;
         }
 
         // Malformed JSON / non-object body (BodyParserMiddleware returns null on invalid JSON)
         $data = $this->request->getData();
         if (!is_array($data)) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ['Invalid JSON body']);
-
+            $this->fail(400, 'Invalid JSON body');
             return;
         }
 
         try {
             $item = $table->get((int)$id, $getOptions);
         } catch (RecordNotFoundException) {
-            $this->response = $this->response->withStatus(404);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ["$resourceName not found"]);
-
+            $this->fail(404, "$resourceName not found");
             return;
         }
 
@@ -158,21 +146,13 @@ class AuthenticatedController extends AppController
 
         // Haz errors?
         if ($item->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', $item->getErrors());
-
+            $this->failMany(400, $item->getErrors());
             return;
         }
 
         // Cannot save?
         if (!$table->save($item)) {
-            $this->response = $this->response->withStatus(500);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ['Internal error']);
-
+            $this->fail(500, 'Internal error');
             return;
         }
 
@@ -201,36 +181,20 @@ class AuthenticatedController extends AppController
 
         // Missing or non-numeric identifier
         if (!ctype_digit((string)$id)) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ["Missing or invalid $resourceName id"]);
-
+            $this->fail(400, "Missing or invalid $resourceName id");
             return;
         }
 
         try {
             $item = $table->get((int)$id, $getOptions);
         } catch (RecordNotFoundException) {
-            $this->response = $this->response->withStatus(404);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ["$resourceName not found"]);
-
+            $this->fail(400, "$resourceName not found");
             return;
         } catch (UnauthorizedException) {
-            $this->response = $this->response->withStatus(401);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ["Not authorized to view this $resourceName"]);
-
+            $this->fail(401, "Not authorized to view this $resourceName");
             return;
         } catch (ForbiddenException) {
-            $this->response = $this->response->withStatus(403);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ["Access to this $resourceName is forbidden"]);
-
+            $this->fail(403, "Access to this $resourceName is forbidden");
             return;
         }
 
@@ -256,11 +220,7 @@ class AuthenticatedController extends AppController
         // Malformed JSON / non-object body (BodyParserMiddleware returns null on invalid JSON)
         $data = $this->request->getData();
         if (!is_array($data)) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ['Invalid JSON body']);
-
+            $this->fail(400, 'Invalid JSON body');
             return;
         }
 
@@ -269,21 +229,13 @@ class AuthenticatedController extends AppController
 
         // Haz errors?
         if ($item->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', $item->getErrors());
-
+            $this->failMany(400, $item->getErrors());
             return;
         }
 
         // Cannot save?
         if (!$table->save($item)) {
-            $this->response = $this->response->withStatus(500);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ['Internal error']);
-
+            $this->fail(500, 'Internal error');
             return;
         }
 
@@ -313,36 +265,20 @@ class AuthenticatedController extends AppController
 
         // Missing or non-numeric identifier
         if (!ctype_digit((string)$id)) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ["Missing or invalid $resourceName id"]);
-
+            $this->fail(400, "Missing or invalid $resourceName id");
             return;
         }
 
         try {
             $item = $table->get((int)$id, $getOptions);
         } catch (RecordNotFoundException) {
-            $this->response = $this->response->withStatus(404);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ["$resourceName not found"]);
-
+            $this->fail(400, "$resourceName not found");
             return;
         } catch (UnauthorizedException) {
-            $this->response = $this->response->withStatus(401);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ["Not authorized to delete this $resourceName"]);
-
+            $this->fail(401, "Not authorized to view this $resourceName");
             return;
         } catch (ForbiddenException) {
-            $this->response = $this->response->withStatus(403);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ["Access to this $resourceName is forbidden"]);
-
+            $this->fail(403, "Access to this $resourceName is forbidden");
             return;
         }
 
@@ -350,23 +286,12 @@ class AuthenticatedController extends AppController
         try {
             $deleted = $table->delete($item);
         } catch (QueryException) {
-            // Thrown when the DB rejects the delete because another record still
-            // references this one via a RESTRICT foreign key (e.g. a Role that still
-            // has Users, or an Accounttype that still has Accounts).
-            $this->response = $this->response->withStatus(409);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ["$resourceName cannot be deleted: still referenced by other records"]);
-
+            $this->fail(409, "$resourceName cannot be deleted: still referenced by other records");
             return;
         }
 
         if (!$deleted) {
-            $this->response = $this->response->withStatus(500);
-            $this->set('item');
-            $this->set('success', false);
-            $this->set('error', ["$resourceName not deleted"]);
-
+            $this->fail(500, "$resourceName not deleted");
             return;
         }
 
