@@ -146,10 +146,22 @@ class AppController extends Controller
      */
     protected function fail(int $statusCode, string $message): void
     {
+        $this->failMany($statusCode, [$message]);
+    }
+
+    /**
+     * I will make it easier to reply with error codes.
+     *
+     * @param int $statusCode I am the HTTP StatusCode for the error response.
+     * @param string[] $messages I am list of error messages sent in the response.
+     * @return void
+     */
+    protected function failMany(int $statusCode, array $messages): void
+    {
         $this->response = $this->response->withStatus($statusCode);
         $this->set('item');
         $this->set('success', false);
-        $this->set('error', [$message]);
+        $this->set('error', $messages);
     }
 
     /**
