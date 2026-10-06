@@ -4,9 +4,16 @@ declare(strict_types=1);
 namespace eurokeep\Controller;
 
 use Cake\Chronos\Chronos;
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Http\Exception\NotFoundException;
+use Cake\Http\Exception\UnauthorizedException;
+use Cake\Http\Response;
 use eurokeep\Model\Entity\Subscription;
 use eurokeep\Model\Table\SubscriptionTable;
+use InvalidArgumentException;
 use JetBrains\PhpStorm\ObjectShape;
+use Psr\Http\Message\UploadedFileInterface;
+use RuntimeException;
 
 /**
  * Subscription Controller
@@ -94,6 +101,93 @@ class SubscriptionController extends AuthenticatedController
     {
         $this->request->allowMethod(['delete']);
         $this->deleteEntity($this->Subscription, $subscriptionId, 'Subscription');
+    }
+
+    /**
+     * I will store the uploaded image (multipart field `logo`) as the logo of the given subscription.
+     * A previously uploaded logo is replaced. Only images are accepted.
+     *
+     * @param mixed $subscriptionId Identifier of the subscription. Not type-hinted, see view().
+     */
+    public function uploadLogo($subscriptionId = null): void
+    {
+        $this->request->allowMethod(['post']);
+        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'error']);
+
+        $item = $this->Subscription->get((int)$subscriptionId);
+
+        $file = $this->request->getUploadedFile('logo');
+        if (!$file instanceof UploadedFileInterface) {
+            $this->fail(400, 'No logo uploaded');
+            return;
+        }
+
+        try {
+            $item = $this->Subscription->storeLogo($item, $file);
+        } catch (InvalidArgumentException $exception) {
+            $this->fail(400, $exception->getMessage());
+            return;
+        } catch (RuntimeException $exception) {
+            $this->fail(500, $exception->getMessage());
+            return;
+        }
+
+        $this->set('item', $item);
+        $this->set('success', true);
+    }
+
+    /**
+     * I will remove the logo of the given subscription (and delete its file, if it was uploaded).
+     *
+     * @param mixed $subscriptionId Identifier of the subscription. Not type-hinted, see view().
+     */
+    public function deleteLogo($subscriptionId = null): void
+    {
+        $this->request->allowMethod(['delete']);
+        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'error']);
+
+        try {
+            $item = $this->Subscription->get((int)$subscriptionId);
+            $item = $this->Subscription->removeLogo($item);
+        } catch (RecordNotFoundException|UnauthorizedException) {
+            $this->fail(404, 'Subscription not found');
+
+            return;
+        } catch (RuntimeException $exception) {
+            $this->fail(500, $exception->getMessage());
+
+            return;
+        }
+
+        $this->set('item', $item);
+        $this->set('success', true);
+    }
+
+    /**
+     * I will deliver the uploaded logo of the given subscription.
+     *
+     * @param mixed $subscriptionId Identifier of the subscription. Not type-hinted, see view().
+     */
+    public function logo($subscriptionId = null): Response
+    {
+        $this->request->allowMethod(['get']);
+
+        try {
+            $item = $this->Subscription->get((int)$subscriptionId);
+        } catch (RecordNotFoundException|UnauthorizedException) {
+            throw new NotFoundException();
+        }
+
+        $path = $this->Subscription->getLogoPath($item);
+        if ($path === null) {
+            throw new NotFoundException();
+        }
+
+        $mimeType = array_search(pathinfo($path, PATHINFO_EXTENSION), SubscriptionTable::LOGO_MIME_TYPES, true);
+
+        return $this->response
+            ->withFile($path)
+            ->withType((string)$mimeType);
     }
 
     /**
