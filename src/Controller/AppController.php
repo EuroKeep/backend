@@ -138,6 +138,21 @@ class AppController extends Controller
     }
 
     /**
+     * I will make it easier to reply with error codes.
+     *
+     * @param int $statusCode I am the HTTP StatusCode for the error response.
+     * @param string $message I am the message text sent in the response.
+     * @return void
+     */
+    protected function fail(int $statusCode, string $message): void
+    {
+        $this->response = $this->response->withStatus($statusCode);
+        $this->set('item');
+        $this->set('success', false);
+        $this->set('error', [$message]);
+    }
+
+    /**
      * For the given $startString and $endString, I will return the first Day and last Day of the year.
      * @param string|null $startString I am the first date of said year.
      * @param string|null $endString I am the last day of said year.
