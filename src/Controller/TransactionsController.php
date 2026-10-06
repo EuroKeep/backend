@@ -116,10 +116,8 @@ class TransactionsController extends AuthenticatedController
         $end = new DateTime($this->request->getQueryParams()['end'] ?? date('Y-m-d H:i:s'));
 
         $transactions = $account->streamTransactions($start, $end);
-        $settlement = $account->settlement($transactions);
 
         $this->set('transactions', $transactions);
-        $this->set('settlement', $settlement);
         $this->set('account', $account);
         $this->set('success', true);
         $this->viewBuilder()->setOption('serialize', ['settlement', 'transactions', 'account', 'success']);
