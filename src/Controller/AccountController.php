@@ -73,7 +73,7 @@ class AccountController extends AuthenticatedController
     public function edit($entityId = null): void
     {
         $this->request->allowMethod(['patch', 'put']);
-        $this->editEntity($this->Account, $entityId, 'Account');
+        $this->editEntity($this->Account, $entityId, 'Account', [], ['balance_value']);
     }
 
     /**

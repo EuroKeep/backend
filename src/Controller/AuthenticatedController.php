@@ -110,8 +110,9 @@ class AuthenticatedController extends AppController
      * @param string $resourceName Human-readable name used in the "not found"/"missing id"
      *   error messages, e.g. 'Account'.
      * @param array $getOptions Options passed through to Table::get(), e.g. ['contain' => []].
+     * @param array $readonlyFields Simple array of fields that will not be updated.
      */
-    final protected function editEntity(Table $table, mixed $id, string $resourceName, array $getOptions = []): void
+    final protected function editEntity(Table $table, mixed $id, string $resourceName, array $getOptions = [], array $readonlyFields = []): void
     {
         $this->viewBuilder()->setOption('serialize', ['item', 'success', 'error']);
 
@@ -145,6 +146,11 @@ class AuthenticatedController extends AppController
             $this->set('error', ["$resourceName not found"]);
 
             return;
+        }
+
+        // Forbid write-access to distinct fields of the entity.
+        foreach ($readonlyFields as $field) {
+            $item->setAccess($field, false);
         }
 
         // Apply the new data
