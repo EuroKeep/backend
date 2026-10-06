@@ -26,6 +26,7 @@ use Cake\Datasource\FactoryLocator;
 use Cake\Error\Middleware\ErrorHandlerMiddleware;
 use Cake\Http\BaseApplication;
 use Cake\Http\Middleware\BodyParserMiddleware;
+use Cake\Http\Middleware\CsrfProtectionMiddleware;
 use Cake\Http\MiddlewareQueue;
 use Cake\ORM\Locator\TableLocator;
 use Cake\Routing\Middleware\RoutingMiddleware;
@@ -90,7 +91,7 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
             ->add(new RoutingMiddleware($this))
             ->add(new BodyParserMiddleware())
             ->add(new AuthenticationMiddleware($this))
-            #->add(new CsrfProtectionMiddleware())
+            ->add(new CsrfProtectionMiddleware())
         ;
         return $middlewareQueue;
     }
@@ -126,7 +127,7 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
             'className' => ApikeyAuthenticator::class,
             'queryParam' => 'apikey',
             'header' => 'Authorization',
-            'apikeyPrefix' => 'X-EUROKEEP-API'
+            'apikeyPrefix' => 'Bearer'
 
         ]);
         // Load the authenticators, you want session first
