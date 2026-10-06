@@ -47,7 +47,7 @@ abstract class OwnedTable extends Table
     /**
      * This does the same as the cake ORM->get()
      *
-     * But it also checks the ownership.
+     * But it also checks the ownership. Also, it disables the access to the user_id field.
      */
     #[Override]
     public function get(mixed $primaryKey, array|string $finder = 'all', CacheInterface|string|null $cache = null, string|Closure|null $cacheKey = null, ...$args): EntityInterface
@@ -57,6 +57,8 @@ abstract class OwnedTable extends Table
         if ($element->has('user_id') && $element->get('user_id') !== self::$currentUserId) {
             throw new UnauthorizedException('This is not yours.');
         }
+
+        $element->setAccess('user_id', false);
 
         return $element;
     }
