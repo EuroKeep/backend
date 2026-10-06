@@ -55,8 +55,6 @@ class AccounttypeTable extends Table
 
         $this->hasMany('Account', [
             'foreignKey' => 'accounttype_id',
-            'dependent' => true,
-            'cascadeCallbacks' => true,
         ]);
     }
 
