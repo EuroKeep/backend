@@ -31,7 +31,8 @@ class SubscriptionController extends AuthenticatedController
     {
         $this->request->allowMethod(['get']);
         $qry = $this->Subscription->find()
-            ->contain(['Categories'])->orderByAsc('Subscription.name');
+            ->contain(['Categories', 'PaymentMethod'])
+            ->orderByAsc('Subscription.name');
 
         $filters = $this->getRequest()->getQueryParams()['filter'] ?? [];
         foreach ($filters as $fieldname => $value) {
