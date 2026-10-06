@@ -26,6 +26,11 @@ class AuthController extends AppController
         parent::initialize();
 
         $this->Authentication->allowUnauthenticated(['login']);
+        $this->Authentication->allowUnauthenticated(['csrf']);
+    }
+
+    public function csrf()
+    {
     }
 
     /**
@@ -39,6 +44,16 @@ class AuthController extends AppController
         $errors = [];
         if ($result && $result->isValid()) {
             $foundUser = $result->getData();
+
+            // Put default settings to the user
+            if (empty($foundUser->settings['SUMMARY_ACCOUNTS'])) {
+                $foundUser->settings['SUMMARY_ACCOUNTS'] = [];
+            }
+
+            // Save that help is displayed if not disabled by the user.
+            if (empty($foundUser->settings['helpDisplay'])) {
+                $foundUser->settings['helpDisplay'] = true;
+            }
             $this->set('success', true);
             $this->set('user', $foundUser);
         } else {
@@ -56,8 +71,7 @@ class AuthController extends AppController
     #[NoReturn]
     public function logout(): void
     {
+        $this->request->allowMethod(['post']);
         $this->Authentication->logout();
-        header('Location: /a/login');
-        exit(302);
     }
 }
