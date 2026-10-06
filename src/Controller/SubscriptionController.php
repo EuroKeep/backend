@@ -218,7 +218,7 @@ class SubscriptionController extends AuthenticatedController
         }
 
         // Create forecast(s)
-        $end = new Chronos('Today next year');
+        $end = new Chronos('last day of next month')->endOfDay();
         $forecast = [];
         /** @var Subscription $subscription */
         foreach ($subscriptions as $subscription) {
