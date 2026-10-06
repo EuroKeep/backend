@@ -74,7 +74,15 @@ class AppController extends Controller
         if (!$this->has('errors')) {
             $this->set('errors', []);
         }
-        $serialize = $this->viewBuilder()->getOption('serialize') ?? ['success'];
+
+        // Add CSRF Token
+        $this->set('csrfToken', $this->request->getAttribute('csrfToken'));
+
+        $serialize = $this->viewBuilder()->getOption('serialize');
+        $serialize[] = 'success';
+        $serialize[] = 'errors';
+        $serialize[] = 'csrfToken';
+        $serialize = array_unique($serialize);
 
         $this->viewBuilder()->setOption('serialize', $serialize);
         $this->viewBuilder()->setClassName('Json');
