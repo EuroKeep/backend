@@ -5,10 +5,17 @@ namespace eurokeep\Model\Table;
 
 use Cake\Datasource\EntityInterface;
 use Cake\Datasource\ResultSetInterface;
+use Cake\Event\EventInterface;
 use Cake\ORM\Behavior\TimestampBehavior;
 use Cake\Validation\Validator;
+use DOMDocument;
 use eurokeep\Model\Entity\Subscription;
+use finfo;
+use InvalidArgumentException;
 use Override;
+use Psr\Http\Message\UploadedFileInterface;
+use RuntimeException;
+use Throwable;
 
 /**
  * Subscription Model
