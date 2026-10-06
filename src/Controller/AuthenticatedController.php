@@ -119,21 +119,18 @@ class AuthenticatedController extends AppController
         // Missing or non-numeric identifier
         if (!ctype_digit((string)$id)) {
             $this->fail(400, "Missing or invalid $resourceName id");
-            return;
         }
 
         // Malformed JSON / non-object body (BodyParserMiddleware returns null on invalid JSON)
         $data = $this->request->getData();
         if (!is_array($data)) {
             $this->fail(400, 'Invalid JSON body');
-            return;
         }
 
         try {
             $item = $table->get((int)$id, $getOptions);
         } catch (RecordNotFoundException) {
             $this->fail(404, "$resourceName not found");
-            return;
         }
 
         // Forbid write-access to distinct fields of the entity.
@@ -147,13 +144,11 @@ class AuthenticatedController extends AppController
         // Haz errors?
         if ($item->hasErrors()) {
             $this->failMany(400, $item->getErrors());
-            return;
         }
 
         // Cannot save?
         if (!$table->save($item)) {
             $this->fail(500, 'Internal error');
-            return;
         }
 
         $this->set('item', $item);
@@ -182,20 +177,16 @@ class AuthenticatedController extends AppController
         // Missing or non-numeric identifier
         if (!ctype_digit((string)$id)) {
             $this->fail(400, "Missing or invalid $resourceName id");
-            return;
         }
 
         try {
             $item = $table->get((int)$id, $getOptions);
         } catch (RecordNotFoundException) {
             $this->fail(400, "$resourceName not found");
-            return;
         } catch (UnauthorizedException) {
             $this->fail(401, "Not authorized to view this $resourceName");
-            return;
         } catch (ForbiddenException) {
             $this->fail(403, "Access to this $resourceName is forbidden");
-            return;
         }
 
         $this->set('item', $item);
@@ -221,7 +212,6 @@ class AuthenticatedController extends AppController
         $data = $this->request->getData();
         if (!is_array($data)) {
             $this->fail(400, 'Invalid JSON body');
-            return;
         }
 
         $item = $table->newEmptyEntity();
@@ -230,13 +220,11 @@ class AuthenticatedController extends AppController
         // Haz errors?
         if ($item->hasErrors()) {
             $this->failMany(400, $item->getErrors());
-            return;
         }
 
         // Cannot save?
         if (!$table->save($item)) {
             $this->fail(500, 'Internal error');
-            return;
         }
 
         $this->response = $this->response->withStatus(201);
@@ -266,20 +254,16 @@ class AuthenticatedController extends AppController
         // Missing or non-numeric identifier
         if (!ctype_digit((string)$id)) {
             $this->fail(400, "Missing or invalid $resourceName id");
-            return;
         }
 
         try {
             $item = $table->get((int)$id, $getOptions);
         } catch (RecordNotFoundException) {
             $this->fail(400, "$resourceName not found");
-            return;
         } catch (UnauthorizedException) {
             $this->fail(401, "Not authorized to view this $resourceName");
-            return;
         } catch (ForbiddenException) {
             $this->fail(403, "Access to this $resourceName is forbidden");
-            return;
         }
 
         // Cannot delete?
@@ -287,12 +271,10 @@ class AuthenticatedController extends AppController
             $deleted = $table->delete($item);
         } catch (QueryException) {
             $this->fail(409, "$resourceName cannot be deleted: still referenced by other records");
-            return;
         }
 
         if (!$deleted) {
             $this->fail(500, "$resourceName not deleted");
-            return;
         }
 
         $this->set('item');

@@ -119,17 +119,14 @@ class SubscriptionController extends AuthenticatedController
         $file = $this->request->getUploadedFile('logo');
         if (!$file instanceof UploadedFileInterface) {
             $this->fail(400, 'No logo uploaded');
-            return;
         }
 
         try {
             $item = $this->Subscription->storeLogo($item, $file);
         } catch (InvalidArgumentException $exception) {
             $this->fail(400, $exception->getMessage());
-            return;
         } catch (RuntimeException $exception) {
             $this->fail(500, $exception->getMessage());
-            return;
         }
 
         $this->set('item', $item);
@@ -151,12 +148,8 @@ class SubscriptionController extends AuthenticatedController
             $item = $this->Subscription->removeLogo($item);
         } catch (RecordNotFoundException|UnauthorizedException) {
             $this->fail(404, 'Subscription not found');
-
-            return;
         } catch (RuntimeException $exception) {
             $this->fail(500, $exception->getMessage());
-
-            return;
         }
 
         $this->set('item', $item);

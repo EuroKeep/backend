@@ -58,7 +58,6 @@ class AuthController extends AppController
             $this->set('user', $foundUser);
         } else {
             $this->fail(400, 'User authentication failed');
-            return;
         }
 
         $this->set('errors', $errors);
