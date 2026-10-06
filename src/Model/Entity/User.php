@@ -43,6 +43,7 @@ class User extends Entity
         'name' => true,
         'email' => true,
         'password' => true,
+        'api_key' => true,
         'account' => true,
         'transaction' => true,
         'role_id' => true,
@@ -56,6 +57,7 @@ class User extends Entity
      */
     protected array $_hidden = [
         'password',
+        'api_key' => true,
     ];
 
     /**

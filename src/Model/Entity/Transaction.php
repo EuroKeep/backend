@@ -23,6 +23,7 @@ use eurokeep\Model\Table\AccountTable;
  * @property int|null $piggybank_id
  *
  * @property Category $category
+ * @property Subscription $subscription
  * @property Account $account
  */
 class Transaction extends Entity
@@ -47,8 +48,10 @@ class Transaction extends Entity
         'account_id' => true,
         'transfer_id' => true,
         'piggybank_id' => true,
+        'subscription_id' => true,
         'category' => true,
         'account' => true,
+        'subscription' => true
     ];
 
     /**

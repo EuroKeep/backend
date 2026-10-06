@@ -55,8 +55,6 @@ class RoleTable extends Table
 
         $this->hasMany('Users', [
             'foreignKey' => 'role_id',
-            'dependent' => true,
-            'cascadeCallbacks' => true,
         ]);
     }
 

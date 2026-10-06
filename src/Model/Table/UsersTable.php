@@ -7,9 +7,9 @@ use Cake\Datasource\EntityInterface;
 use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\Association\HasMany;
 use Cake\ORM\Behavior\TimestampBehavior;
-use eurokeep\Model\Entity\User;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use eurokeep\Model\Entity\User;
 use Override;
 
 /**
@@ -88,9 +88,13 @@ class UsersTable extends Table
             ->notEmptyString('email');
 
         $validator
-            ->numeric('password')
+            ->scalar('password')
             ->requirePresence('password', 'create')
             ->notEmptyString('password');
+
+        $validator
+            ->scalar('api_key')
+            ->allowEmptyString('api_key');
 
         $validator
             ->numeric('role_id')
@@ -129,6 +133,19 @@ class UsersTable extends Table
     {
         // VERIFY COMPLEXITY
         $user->password = $password;
+        $user->flags = 3; //Make this the binary operation!
+        $this->save($user);
+    }
+
+    /**
+     * I will set the apikey of the given $User.
+     * @param User $user Which user?
+     * @param string $apiKey ApiKey of the user.
+     */
+    public function setApiKey(User $user, string $apiKey): void
+    {
+        // VERIFY COMPLEXITY
+        $user->api_key = $apiKey;
         $user->flags = 3; //Make this the binary operation!
         $this->save($user);
     }

@@ -15,8 +15,8 @@ use InvalidArgumentException;
 class TransactionsController extends AuthenticatedController
 {
     public array $paginate = [
-        'limit' => 100,
-        'maxLimit' => 100,
+        'limit' => 1000,
+        'maxLimit' => 1000,
         'order' => [
             'Transactions.created' => 'desc',
         ],
@@ -58,14 +58,46 @@ class TransactionsController extends AuthenticatedController
     {
         $this->request->allowMethod(['get']);
         $qry = $this->Transactions->find();
+        $qry->contain(['Categories']);
 
-        $transactions = $this->paginate($qry);
+        [$start, $end] = $this->getRange();
 
-        $this->set(compact('transactions'));
+        $params = $this->request->getQueryParams();
+        $comment = $params['comment'] ?? false;
+        if ($comment) {
+            $qry->where(['Transactions.comment LIKE' => '%' . $comment . '%']);
+        }
+        if ($start && $end) {
+            $qry->where([
+                'Transactions.created >=' => $start,
+                'Transactions.created <' => $end
+            ]);
+        }
 
-        $this->set('transactions', $transactions);
+
+        $items = $this->paginate($qry);
+
+        $this->set(compact('items'));
+
+        $revenues = 0;
+        $expenses = 0;
+
+        foreach ($items as $item) {
+            if ($item->balance_value > 0) {
+                $revenues += $item->balance_value;
+                continue;
+            }
+            $expenses += $item->balance_value;
+        }
+        $total = $expenses + $revenues;
+
+
+        $this->set('items', $items);
+        $this->set('total', $total);
+        $this->set('expenses', $expenses);
+        $this->set('revenues', $revenues);
         $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['transactions', 'success']);
+        $this->viewBuilder()->setOption('serialize', ['items', 'total', 'revenues', 'expenses', 'success']);
     }
 
     /**
