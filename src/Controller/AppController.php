@@ -22,6 +22,8 @@ use Cake\Controller\Controller;
 use Cake\Event\EventInterface;
 use Cake\I18n\DateTime;
 use Cake\View\JsonView;
+use Closure;
+use eurokeep\Controller\Exception\ActionFailedException;
 use Override;
 
 /**
@@ -91,6 +93,34 @@ class AppController extends Controller
     }
 
     /**
+     * @inheritDoc
+     *
+     * I turn an ActionFailedException thrown by fail()/failMany() into the regular JSON error response,
+     * so the action is aborted immediately but the response is still rendered via beforeRender().
+     *
+     * This makes it ultimately easier to early-escape from Controller methods in when you call $this->fail()
+     */
+    #[Override]
+    public function invokeAction(Closure $action, array $args): void
+    {
+        try {
+            parent::invokeAction($action, $args);
+        } catch (ActionFailedException $failure) {
+            $this->response = $this->response->withStatus($failure->statusCode);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', $failure->messages);
+
+            // The action may not have added 'error' to its serialize list (e.g. AuthController::login()).
+            $serialize = (array)$this->viewBuilder()->getOption('serialize');
+            $serialize[] = 'error';
+            $this->viewBuilder()->setOption('serialize', $serialize);
+
+            $this->render();
+        }
+    }
+
+    /**
      * I will verify if the viewBuilder has the given $key.
      * @param string $key The key you want to check for.
      * @return bool  Whether the $key is part of the viewBuilder.
@@ -138,30 +168,29 @@ class AppController extends Controller
     }
 
     /**
-     * I will make it easier to reply with error codes.
+     * I will abort the current action and reply with the given error code.
+     * No `return;` needed afterwards, the action is not processed any further.
      *
      * @param int $statusCode I am the HTTP StatusCode for the error response.
      * @param string $message I am the message text sent in the response.
-     * @return void
+     * @throws ActionFailedException Always; handled by invokeAction().
      */
-    protected function fail(int $statusCode, string $message): void
+    protected function fail(int $statusCode, string $message): never
     {
         $this->failMany($statusCode, [$message]);
     }
 
     /**
-     * I will make it easier to reply with error codes.
+     * I will abort the current action and reply with the given error code and messages.
+     * No `return;` needed afterwards, the action is not processed any further.
      *
      * @param int $statusCode I am the HTTP StatusCode for the error response.
-     * @param string[] $messages I am list of error messages sent in the response.
-     * @return void
+     * @param array<array-key, mixed> $messages I am list of error messages sent in the response.
+     * @throws ActionFailedException Always; handled by invokeAction().
      */
-    protected function failMany(int $statusCode, array $messages): void
+    protected function failMany(int $statusCode, array $messages): never
     {
-        $this->response = $this->response->withStatus($statusCode);
-        $this->set('item');
-        $this->set('success', false);
-        $this->set('error', $messages);
+        throw new ActionFailedException($statusCode, $messages);
     }
 
     /**
