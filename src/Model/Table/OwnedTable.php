@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace eurokeep\Model\Table;
 
 use Cake\Datasource\EntityInterface;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Http\Exception\UnauthorizedException;
 use Cake\ORM\Table;
 use Closure;
@@ -48,6 +49,9 @@ abstract class OwnedTable extends Table
      * This does the same as the cake ORM->get()
      *
      * But it also checks the ownership. Also, it disables the access to the user_id field.
+     *
+     * @throws RecordNotFoundException When the entity does not exist (or is filtered out by UserOwnedBehavior).
+     * @throws UnauthorizedException When the entity belongs to another user.
      */
     #[Override]
     public function get(mixed $primaryKey, array|string $finder = 'all', CacheInterface|string|null $cache = null, string|Closure|null $cacheKey = null, ...$args): EntityInterface

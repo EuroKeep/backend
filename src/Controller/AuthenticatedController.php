@@ -20,8 +20,6 @@ namespace eurokeep\Controller;
 use Authentication\AuthenticationService;
 use Cake\Database\Exception\QueryException;
 use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\Http\Exception\ForbiddenException;
-use Cake\Http\Exception\UnauthorizedException;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use eurokeep\Model\Entity\User;
@@ -183,10 +181,6 @@ class AuthenticatedController extends AppController
             $item = $table->get((int)$id, $getOptions);
         } catch (RecordNotFoundException) {
             $this->fail(400, "$resourceName not found");
-        } catch (UnauthorizedException) {
-            $this->fail(401, "Not authorized to view this $resourceName");
-        } catch (ForbiddenException) {
-            $this->fail(403, "Access to this $resourceName is forbidden");
         }
 
         $this->set('item', $item);
@@ -260,10 +254,6 @@ class AuthenticatedController extends AppController
             $item = $table->get((int)$id, $getOptions);
         } catch (RecordNotFoundException) {
             $this->fail(400, "$resourceName not found");
-        } catch (UnauthorizedException) {
-            $this->fail(401, "Not authorized to view this $resourceName");
-        } catch (ForbiddenException) {
-            $this->fail(403, "Access to this $resourceName is forbidden");
         }
 
         // Cannot delete?

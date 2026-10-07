@@ -32,8 +32,8 @@ class ApikeyIdentifier extends AbstractIdentifier implements IdentifierInterface
         /** @var UsersTable $UserTable */
         $UsersTable = TableRegistry::getTableLocator()->get('Users');
 
-        return $UsersTable->find()->where([
+        return $UsersTable->unhydratedFind()->where([
             'api_key' => $apikey
-        ])->disableHydration()->firstOrFail();
+        ])->firstOrFail();
     }
 }

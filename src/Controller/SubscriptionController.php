@@ -167,7 +167,7 @@ class SubscriptionController extends AuthenticatedController
 
         try {
             $item = $this->Subscription->get((int)$subscriptionId);
-        } catch (RecordNotFoundException|UnauthorizedException) {
+        } catch (RecordNotFoundException|UnauthorizedException) { // @phpstan-ignore catch.neverThrown, catch.neverThrown (thrown by OwnedTable::get(), hidden by the baked @method get())
             throw new NotFoundException();
         }
 
