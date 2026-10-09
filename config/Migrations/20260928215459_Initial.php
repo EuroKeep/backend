@@ -50,7 +50,7 @@ class Initial extends BaseMigration
             ->addColumn('image', 'string', [
                 'default' => null,
                 'limit' => 128,
-                'null' => false,
+                'null' => true,
             ])
             ->create();
 
