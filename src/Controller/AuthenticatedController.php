@@ -20,13 +20,20 @@ namespace eurokeep\Controller;
 use Authentication\AuthenticationService;
 use Cake\Database\Exception\QueryException;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Http\Exception\NotFoundException;
+use Cake\Http\Exception\UnauthorizedException;
+use Cake\Http\Response;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
+use eurokeep\Model\Behavior\LogoBehavior;
 use eurokeep\Model\Entity\User;
 use eurokeep\Model\Table\OwnedTable;
 use eurokeep\Model\Table\UsersTable;
+use InvalidArgumentException;
 use JetBrains\PhpStorm\NoReturn;
 use Override;
+use Psr\Http\Message\UploadedFileInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -269,5 +276,113 @@ class AuthenticatedController extends AppController
 
         $this->set('item');
         $this->set('success', true);
+    }
+
+    /**
+     * I am the generic "upload-logo" JSON API action shared by all controllers whose Table uses the
+     * LogoBehavior. I store the uploaded image (multipart field `logo`) as the one and only logo of the
+     * entity, a previously uploaded logo is replaced. Only images are accepted.
+     *
+     * @param Table $table The Table (with LogoBehavior) to load the entity through.
+     * @param mixed $id The (route) identifier of the entity, see editEntity().
+     * @param string $resourceName Human-readable name used in error messages, e.g. 'Subscription'.
+     *
+     * @throws
+     */
+    final protected function uploadLogoEntity(Table $table, mixed $id, string $resourceName): void
+    {
+        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'error']);
+
+        if (!ctype_digit((string)$id)) {
+            $this->fail(400, "Missing or invalid $resourceName id");
+        }
+
+        try {
+            $item = $table->get((int)$id);
+        } catch (RecordNotFoundException|UnauthorizedException) {
+            $this->fail(404, "$resourceName not found");
+        }
+
+        $file = $this->request->getUploadedFile('logo');
+        if (!$file instanceof UploadedFileInterface) {
+            $this->fail(400, 'No logo uploaded');
+        }
+
+        try {
+            /** @var LogoBehavior $logo */
+            $logo = $table->getBehavior('Logo');
+            $item = $logo->storeLogo($item, $file);
+        } catch (InvalidArgumentException $exception) {
+            $this->fail(400, $exception->getMessage());
+        } catch (RuntimeException $exception) {
+            $this->fail(500, $exception->getMessage());
+        }
+
+        $this->set('item', $item);
+        $this->set('success', true);
+    }
+
+    /**
+     * I am the generic "delete-logo" JSON API action: I remove the logo of the entity (and delete its
+     * file, if it was uploaded).
+     *
+     * @param Table $table The Table (with LogoBehavior) to load the entity through.
+     * @param mixed $id The (route) identifier of the entity, see editEntity().
+     * @param string $resourceName Human-readable name used in error messages, e.g. 'Subscription'.
+     */
+    final protected function deleteLogoEntity(Table $table, mixed $id, string $resourceName): void
+    {
+        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'error']);
+
+        if (!ctype_digit((string)$id)) {
+            $this->fail(400, "Missing or invalid $resourceName id");
+        }
+
+        try {
+            $item = $table->get((int)$id);
+            /** @var LogoBehavior $logo */
+            $logo = $table->getBehavior('Logo');
+            $item = $logo->removeLogo($item);
+        } catch (RecordNotFoundException|UnauthorizedException) {
+            $this->fail(404, "$resourceName not found");
+        } catch (RuntimeException $exception) {
+            $this->fail(500, $exception->getMessage());
+        }
+
+        $this->set('item', $item);
+        $this->set('success', true);
+    }
+
+    /**
+     * I am the generic "logo" action: I deliver the uploaded logo file of the entity.
+     *
+     * @param Table $table The Table (with LogoBehavior) to load the entity through.
+     * @param mixed $id The (route) identifier of the entity.
+     * @throws NotFoundException If the entity or its uploaded logo does not exist.
+     */
+    final protected function logoEntityResponse(Table $table, mixed $id): Response
+    {
+        if (!ctype_digit((string)$id)) {
+            throw new NotFoundException();
+        }
+
+        try {
+            $item = $table->get((int)$id);
+        } catch (RecordNotFoundException|UnauthorizedException) { // @phpstan-ignore catch.neverThrown (UnauthorizedException is thrown by OwnedTable::get())
+            throw new NotFoundException();
+        }
+
+        /** @var LogoBehavior $logo */
+        $logo = $table->getBehavior('Logo');
+        $path = $logo->getLogoPath($item);
+        if ($path === null) {
+            throw new NotFoundException();
+        }
+
+        $mimeType = array_search(pathinfo($path, PATHINFO_EXTENSION), LogoBehavior::MIME_TYPES, true);
+
+        return $this->response
+            ->withFile($path)
+            ->withType((string)$mimeType);
     }
 }
