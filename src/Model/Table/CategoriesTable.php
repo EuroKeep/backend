@@ -48,7 +48,9 @@ class CategoriesTable extends Table
         $this->setPrimaryKey('id');
 
         $this->addBehavior('Timestamp');
-        $this->addBehavior('Tree');
+        $this->addBehavior('Tree', [
+            'recoverOrder' => ['lft' => 'ASC'],
+        ]);
 
         $this->belongsTo('ParentCategories', [
             'className' => 'Categories',

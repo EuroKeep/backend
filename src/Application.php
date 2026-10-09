@@ -91,9 +91,28 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
             ->add(new RoutingMiddleware($this))
             ->add(new BodyParserMiddleware())
             ->add(new AuthenticationMiddleware($this))
-            ->add(new CsrfProtectionMiddleware())
+            ->add($this->getCsrfProtectionMiddleware())
         ;
         return $middlewareQueue;
+    }
+
+    /**
+     * I will return the CsrfProtectionMiddleware, which skips the token check
+     * for requests authenticated by the ApikeyAuthenticator.
+     */
+    protected function getCsrfProtectionMiddleware(): CsrfProtectionMiddleware
+    {
+        $csrfProtectionMiddleware = new CsrfProtectionMiddleware();
+        $csrfProtectionMiddleware->skipCheckCallback(function (ServerRequestInterface $request): bool {
+            $authenticationService = $request->getAttribute('authentication');
+            if (!$authenticationService instanceof AuthenticationService) {
+                return false;
+            }
+
+            return $authenticationService->getAuthenticationProvider() instanceof ApikeyAuthenticator;
+        });
+
+        return $csrfProtectionMiddleware;
     }
 
     /**

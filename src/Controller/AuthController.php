@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace eurokeep\Controller;
 
 use Authentication\Controller\Component\AuthenticationComponent;
+use Cake\ORM\TableRegistry;
+use eurokeep\Model\Table\UsersTable;
 use JetBrains\PhpStorm\NoReturn;
 use Override;
 
@@ -25,12 +27,33 @@ class AuthController extends AppController
     {
         parent::initialize();
 
-        $this->Authentication->allowUnauthenticated(['login']);
-        $this->Authentication->allowUnauthenticated(['csrf']);
+        $this->Authentication->allowUnauthenticated(['login', 'init', 'register', 'logout']);
     }
 
-    public function csrf()
+    public function init()
     {
+        $this->set('enable_registration', filter_var(env('ENABLE_REGISTRATION', false), FILTER_VALIDATE_BOOLEAN));
+        $this->viewBuilder()->setOption('serialize', ['user', 'success', 'errors', 'enable_registration']);
+    }
+
+    public function register()
+    {
+        if (!filter_var(env('ENABLE_REGISTRATION', false), FILTER_VALIDATE_BOOLEAN)) {
+            $this->fail(400, 'Registration disabled. Check your .env file.');
+        }
+        $this->request->allowMethod(['put']);
+
+        $username = trim((string)$this->request->getData()['username']);
+        $password = $this->request->getData()['password'];
+
+        /** @var UsersTable $usersTable */
+        $usersTable = TableRegistry::getTableLocator()->get('Users');
+        $user = $usersTable->create($username, $username, $password);
+
+        $this->set('user', $user);
+        $this->set('success', true);
+        $this->set('errors', []);
+        $this->viewBuilder()->setOption('serialize', ['user', 'success', 'errors']);
     }
 
     /**
