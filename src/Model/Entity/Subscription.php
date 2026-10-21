@@ -1,13 +1,27 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code.
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
 namespace eurokeep\Model\Entity;
 
 use Cake\Chronos\Chronos;
 use Cake\I18n\FrozenDate;
 use Cake\I18n\FrozenTime;
 use Cake\ORM\Entity;
-use \DateInterval;
+use DateInterval;
 
 
 /**
@@ -18,6 +32,7 @@ use \DateInterval;
  * @property FrozenTime $modified
  * @property int $flags
  * @property string $name
+ * @property string|null $logo
  * @property int $account_id
  * @property float $balance_value
  * @property string|null $subscription_group_id
@@ -49,11 +64,13 @@ class Subscription extends Entity
         'account_id' => true,
         'balance_value' => true,
         'category_id' => true,
+        'paymentmethod_id' => true,
         'interval' => true,
         'start' => true,
         'end' => true,
         'term' => true,
         'noticeperiod' => true,
+        'description' => true,
         'comments' => true,
         'user_id' => true,
     ];
@@ -75,6 +92,22 @@ class Subscription extends Entity
             'Y' => new DateInterval("P{$value}Y"),
             'D' => new DateInterval("P{$value}D"),
         };
+    }
+
+    /**
+     * I will extrapolate the amount per execution to a full year.
+     * Uses the same factors as the frontend (D = 365, W = 52, M = 12, Y = 1 per year).
+     * @return float|null I am the annual cost, or null if the interval cannot be parsed.
+     */
+    public function getAnnualCost(): ?float
+    {
+        if (!preg_match('/^(\d+)([DWMY])$/', (string)$this->interval, $matches) || (int)$matches[1] === 0) {
+            return null;
+        }
+
+        $perYear = ['D' => 365, 'W' => 52, 'M' => 12, 'Y' => 1][$matches[2]] / (int)$matches[1];
+
+        return (float)$this->balance_value * $perYear;
     }
 
     /**

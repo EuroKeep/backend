@@ -1,0 +1,24 @@
+includes:
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
+
+parameters:
+    level: 9
+
+    paths:
+        - src
+        - tests
+
+    phpVersion: 80400
+
+    checkMissingTypehints: true
+    checkMissingCallableSignature: true
+
+    checkUninitializedProperties: true
+    checkDynamicProperties: true
+
+    treatPhpDocTypesAsCertain: true
+
+    reportUnmatchedIgnoredErrors: true
+    ignoreErrors: []

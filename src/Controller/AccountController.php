@@ -1,168 +1,125 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code.
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
 namespace eurokeep\Controller;
 
-use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\Datasource\ResultSetInterface;
-use eurokeep\Model\Entity\Account;
-use eurokeep\Model\Table\AccountTable;
+use Cake\Database\Expression\QueryExpression;
 
 /**
  * Account Controller
  *
- * @property AccountTable $Account
- * @method Account[]|ResultSetInterface paginate($object = null, array $settings = [])
+ * @property \eurokeep\Model\Table\AccountTable $Account
+ * @method \eurokeep\Model\Entity\Account[]|\Cake\Datasource\ResultSetInterface paginate($object = null, array $settings = [])
  */
 class AccountController extends AuthenticatedController
 {
     public array $paginate = [
         'limit' => 100,
-        'maxLimit' => 100
+        'maxLimit' => 100,
     ];
+
     /**
      * Index method
-     *
      */
     public function index(): void
     {
         $this->request->allowMethod(['get']);
-        $accountQuery = $this
+        $query = $this
             ->Account
             ->find()
-            ->orderBy(['Account.name' => 'ASC']);
+            ->where(fn(QueryExpression $exp) => $exp->add('(flags & 1) <> 0'))
+            ->orderBy(fn(QueryExpression $exp, $q) => [
+                '(flags & 2)' => 'DESC',
+                'Account.name' => 'ASC',
+            ]);
 
-        $filters = $this->getRequest()->getQueryParams()['filter'] ?? [];
-        foreach ($filters as $fieldname => $value) {
-            $accountQuery->where(["$fieldname LIKE" => "$value%",]);
-        }
-
-        $account = $this->paginate($accountQuery);
-
-        $this->set('totalBalances', $this->user->getTotalBalances());
-        $this->set('items', $account);
-        $this->viewBuilder()->setOption('serialize', ['items', 'success', 'totalBalances']);
+        $this->set('items', $this->paginate($query));
+        $this->viewBuilder()->setOption('serialize', ['items', 'success']);
     }
 
     /**
      * Add method
-     *
      */
     public function add(): void
     {
         $this->request->allowMethod(['post']);
-        $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['success']);
-
-        // Fetch data
-        $account = $this->request->getData();
-        $account['user_id'] = $this->user->id;
-        $account['balance_value'] = 0;
-
-        // Add the Account
-        $entity = $this->Account->newEmptyEntity();
-        $entity = $this->Account->patchEntity($entity, $account);
-
-        if ($entity->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('error', $entity->getErrors());
-            $this->viewBuilder()->setOption('serialize', ['error']);
-            return;
-        }
-        $this->Account->save($entity);
-
-        $this->set('account', $entity);
-        $this->viewBuilder()->setOption('serialize', ['success', 'account']);
+        $this->addEntity($this->Account, [
+            'user_id' => $this->user->id,
+            'balance_value' => 0,
+            'flags' => 1,
+        ]);
     }
 
     /**
      * View method
      *
-     * @param int|null $accountId Account id.
-     * @throws RecordNotFoundException When record not found.
+     * @param mixed $entityId Identifier of the account. Not type-hinted so that a missing or
+     *   non-numeric route segment can be reported as a normal 400 response instead of an
+     *   uncaught ArgumentCountError/TypeError.
      */
-    public function view(int|null $accountId = null): void
+    public function view($entityId = null): void
     {
         $this->request->allowMethod(['get']);
-        $account = $this->Account->get($accountId, [
-            'contain' => [],
-        ]);
-
-        $this->set('account', $account);
-        $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['account', 'success']);
+        $this->viewEntity($this->Account, $entityId, 'Account');
     }
-
 
     /**
      * Edit method
      *
-     * @param int|null $accountId Account id.
-     * @throws RecordNotFoundException When record not found.
+     * @param mixed $entityId Identifier of the account. Not type-hinted so that a missing
+     *   or non-numeric route segment can be reported as a normal 400 response instead of
+     *   an uncaught ArgumentCountError/TypeError.
      */
-    public function edit(int|null $accountId = null): void
+    public function edit($entityId = null): void
     {
-        $this->request->allowMethod(['post']);
-
-        $account = $this->Account->get($accountId);
-
-        // Check Ownership
-        if ($account->user_id !== $this->user->id) {
-            $this->http403('This account is not yours');
-        }
-
-        // Apply the new data
-        $account = $this
-            ->Account
-            ->patchEntity($account, $this->request->getData());
-
-        // Haz errors?
-        if ($account->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('error', $account->getErrors());
-            $this->viewBuilder()->setOption('serialize', ['error']);
-            return;
-        }
-
-        // Cannot save?
-        if (!$this->Account->save($account)) {
-            $this->set('success', false);
-        }
-        $this->set(compact('account'));
+        $this->request->allowMethod(['patch', 'put']);
+        $this->editEntity($this->Account, $entityId, 'Account', [], ['balance_value']);
     }
 
     /**
      * Delete method
      *
-     * @param int|null $accountId Account id.
-     * @throws RecordNotFoundException When record not found.
+     * @param mixed $entityId Identifier of the account. Not type-hinted so that a missing or
+     *   non-numeric route segment can be reported as a normal 400 response instead of an
+     *   uncaught ArgumentCountError/TypeError.
      */
-    public function delete(int|null $accountId = null): void
+    public function delete($entityId = null): void
     {
         $this->request->allowMethod(['delete']);
-        $account = $this->Account->get($accountId);
-
-        if (!$this->Account->delete($account)) {
-            $this->addError('Error', 'Account not deleted.');
-        }
+        $this->deleteEntity($this->Account, $entityId, 'Account');
     }
 
     /**
-     * @param int|null $accountId Account id.
+     * toggleFavourite method
+     *
+     * @param int $entityId Identifier of the account.
+     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
-    public function summarize(int|null $accountId = null): void
+    public function toggleFavourite(int $entityId): void
     {
-        $this->request->allowMethod(['get']);
-        if ($accountId) {
-            $accounts = [$this->Account->find()->where(['id' => $accountId])->first()];
-        } else {
-            $accounts = $this->Account->find()->all()->toArray();
-        }
-        foreach ($accounts as $account) {
-            $account->summarize();
-        }
-        $this->set('accounts', $accounts);
+        $this->request->allowMethod(['post']);
+        // Fetch & Toggle
+        $entity = $this->Account->get($entityId);
+        $entity->flags ^= 2;
+        $this->Account->save($entity);
+
+        // Response
+        $this->set('item', $entity);
         $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['accounts', 'success']);
+        $this->viewBuilder()->setOption('serialize', ['item', 'success']);
     }
 }

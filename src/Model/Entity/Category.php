@@ -1,12 +1,27 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code.
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
 namespace eurokeep\Model\Entity;
 
 use Cake\Chronos\Chronos;
 use Cake\Datasource\ResultSetInterface;
 use Cake\I18n\DateTime;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -73,7 +88,7 @@ class Category extends Entity
      * @param string $currency I am the Currency this Budget is valid for.
      * @return ResultSetInterface I am the list of Transactions found in the range.
      */
-    public function getTransactions(Chronos $start, Chronos $end, string $currency): ResultSetInterface
+    public function getTransactions(Chronos $start, Chronos $end, string $currency, bool $useTree = true, bool $spendingOnly = true): ResultSetInterface
     {
         $accountIds = TableRegistry::getTableLocator()
             ->get('Account')
@@ -84,14 +99,20 @@ class Category extends Entity
             ->all()
             ->extract('id')
             ->toArray();
+        if (empty($accountIds)) {
+            return new ResultSet([]);
+        }
 
-        $descendants = $this
-            ->getChildren(false)
-            ->extract('id')
-            ->toList();
+        $descendants = [];
+        if ($useTree) {
+            $descendants = $this
+                ->getChildren(false)
+                ->extract('id')
+                ->toList();
+        }
         $descendants[] = $this->id;
 
-        return TableRegistry::getTableLocator()
+        $table = TableRegistry::getTableLocator()
             ->get('Transactions')
             ->find()
             ->where([
@@ -99,8 +120,13 @@ class Category extends Entity
                 'Transactions.category_id IN' => $descendants,
                 'Transactions.created >=' => $start,
                 'Transactions.created <' => $end,
-#                'Transactions.balance_value <' => 0
-            ])
+            ]);
+        if (!$spendingOnly) {
+            $table->where([
+                'Transactions.balance_value <' => 0
+            ]);
+        }
+        return $table
             ->contain(['Account', 'Categories'])
             ->orderBy(['Transactions.created' => 'DESC'])
             ->all();

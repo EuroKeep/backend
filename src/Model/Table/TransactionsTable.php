@@ -1,21 +1,30 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code.
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
 namespace eurokeep\Model\Table;
 
-use Cake\Datasource\ResultSetInterface;
-use Cake\ORM\Behavior\TimestampBehavior;
 use Cake\ORM\ResultSet;
-use Closure;
 use eurokeep\Model\Entity\Transaction;
 use ArrayObject;
 use Cake\Datasource\EntityInterface;
-use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use Override;
-use Psr\SimpleCache\CacheInterface;
 
 /**
  * Transactions Model
@@ -38,7 +47,7 @@ use Psr\SimpleCache\CacheInterface;
  *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
-class TransactionsTable extends Table
+class TransactionsTable extends OwnedTable
 {
     /**
      * Initialize method
@@ -60,6 +69,12 @@ class TransactionsTable extends Table
         ]);
         $this->belongsTo('Account', [
             'foreignKey' => 'account_id',
+        ]);
+        $this->belongsTo('Users', [
+            'foreignKey' => 'user_id',
+        ]);
+        $this->belongsTo('Subscription', [
+            'foreignKey' => 'subscription_id',
         ]);
     }
 
@@ -88,7 +103,8 @@ class TransactionsTable extends Table
 
         $validator
             ->integer('category_id')
-            ->allowEmptyString('category_id');
+            ->requirePresence('category_id', 'create')
+            ->notEmptyString('category_id');
 
         $validator
             ->integer('account_id')
@@ -113,7 +129,7 @@ class TransactionsTable extends Table
     }
 
     /**
-     * Overridden to automatically refresh the balance of the affected Account when a Transaction is created or modified.
+     * Overridden to automatically refresh the balance of the affected Accounts when a Transaction is created or modified.
      *
      * @param Transaction $entity
      */
@@ -146,15 +162,14 @@ class TransactionsTable extends Table
         return true;
     }
 
-
     public static function summarize(ResultSet $transactions): float
     {
         $a = 0;
 
-        foreach($transactions as $transaction) {
+        foreach ($transactions as $transaction) {
             $a += $transaction->balance_value;
         }
 
-        return round((float) $a, 2);
+        return round((float)$a, 2);
     }
 }

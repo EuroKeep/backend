@@ -1,5 +1,23 @@
 <?php
 /**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Based on the CakePHP(tm) application skeleton (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code, and THIRD-PARTY-LICENSES.md.
+ * Redistributions of files must retain the above copyright notices.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @copyright Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
+/**
  * Routes configuration.
  *
  * In this file, you set up routes to your controllers and their actions.
@@ -8,17 +26,6 @@
  *
  * It's loaded within the context of `Application::routes()` method which
  * receives a `RouteBuilder` instance `$routes` as method argument.
- *
- * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
- *
- * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
- * Redistributions of files must retain the above copyright notice.
- *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
- * @link          https://cakephp.org CakePHP(tm) Project
- * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 use Cake\Routing\Route\DashedRoute;

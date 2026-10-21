@@ -2,16 +2,20 @@
 declare(strict_types=1);
 
 /**
- * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Based on the CakePHP(tm) application skeleton (https://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
- * Redistributions of files must retain the above copyright notice.
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code, and THIRD-PARTY-LICENSES.md.
+ * Redistributions of files must retain the above copyright notices.
  *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
  * @copyright Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
- * @link      https://cakephp.org CakePHP(tm) Project
- * @since     0.2.9
+ * @link      https://eurokeep.io EuroKeep
  * @license   https://opensource.org/licenses/mit-license.php MIT License
  */
 
@@ -22,6 +26,8 @@ use Cake\Controller\Controller;
 use Cake\Event\EventInterface;
 use Cake\I18n\DateTime;
 use Cake\View\JsonView;
+use Closure;
+use eurokeep\Controller\Exception\ActionFailedException;
 use Override;
 
 /**
@@ -74,12 +80,48 @@ class AppController extends Controller
         if (!$this->has('errors')) {
             $this->set('errors', []);
         }
-        $serialize = $this->viewBuilder()->getOption('serialize') ?? ['success'];
+
+        // Add CSRF Token
+        $this->set('csrfToken', $this->request->getAttribute('csrfToken'));
+
+        $serialize = $this->viewBuilder()->getOption('serialize');
+        $serialize[] = 'success';
+        $serialize[] = 'errors';
+        $serialize[] = 'csrfToken';
+        $serialize = array_unique($serialize);
 
         $this->viewBuilder()->setOption('serialize', $serialize);
         $this->viewBuilder()->setClassName('Json');
 
         parent::beforeRender($event);
+    }
+
+    /**
+     * @inheritDoc
+     *
+     * I turn an ActionFailedException thrown by fail()/failMany() into the regular JSON error response,
+     * so the action is aborted immediately but the response is still rendered via beforeRender().
+     *
+     * This makes it ultimately easier to early-escape from Controller methods in when you call $this->fail()
+     */
+    #[Override]
+    public function invokeAction(Closure $action, array $args): void
+    {
+        try {
+            parent::invokeAction($action, $args);
+        } catch (ActionFailedException $failure) {
+            $this->response = $this->response->withStatus($failure->statusCode);
+            $this->set('item');
+            $this->set('success', false);
+            $this->set('error', $failure->messages);
+
+            // The action may not have added 'error' to its serialize list (e.g. AuthController::login()).
+            $serialize = (array)$this->viewBuilder()->getOption('serialize');
+            $serialize[] = 'error';
+            $this->viewBuilder()->setOption('serialize', $serialize);
+
+            $this->render();
+        }
     }
 
     /**
@@ -127,6 +169,32 @@ class AppController extends Controller
             $startChronos,
             $endChronos,
         ];
+    }
+
+    /**
+     * I will abort the current action and reply with the given error code.
+     * No `return;` needed afterwards, the action is not processed any further.
+     *
+     * @param int $statusCode I am the HTTP StatusCode for the error response.
+     * @param string $message I am the message text sent in the response.
+     * @throws ActionFailedException Always; handled by invokeAction().
+     */
+    protected function fail(int $statusCode, string $message): never
+    {
+        $this->failMany($statusCode, [$message]);
+    }
+
+    /**
+     * I will abort the current action and reply with the given error code and messages.
+     * No `return;` needed afterwards, the action is not processed any further.
+     *
+     * @param int $statusCode I am the HTTP StatusCode for the error response.
+     * @param array<array-key, mixed> $messages I am list of error messages sent in the response.
+     * @throws ActionFailedException Always; handled by invokeAction().
+     */
+    protected function failMany(int $statusCode, array $messages): never
+    {
+        throw new ActionFailedException($statusCode, $messages);
     }
 
     /**

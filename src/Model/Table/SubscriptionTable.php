@@ -1,6 +1,20 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code.
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
 namespace eurokeep\Model\Table;
 
 use Cake\Datasource\EntityInterface;
@@ -28,6 +42,7 @@ use Override;
  * @method Subscription[]|ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
  *
  * @mixin TimestampBehavior
+ * @mixin \eurokeep\Model\Behavior\LogoBehavior
  */
 class SubscriptionTable extends OwnedTable
 {
@@ -49,7 +64,19 @@ class SubscriptionTable extends OwnedTable
             'foreignKey' => 'category_id',
         ]);
 
+        $this->belongsTo('Account', [
+            'foreignKey' => 'account_id',
+        ]);
+
+        $this->belongsTo('PaymentMethod', [
+            'foreignKey' => 'paymentmethod_id',
+        ]);
+
         $this->addBehavior('Timestamp');
+        $this->addBehavior('Logo', [
+            'field' => 'logo',
+            'directory' => ROOT . DS . 'uploads' . DS . 'subscription-logos',
+        ]);
     }
 
     /**
@@ -83,6 +110,14 @@ class SubscriptionTable extends OwnedTable
         $validator
             ->integer('category_id')
             ->allowEmptyString('category_id');
+
+        $validator
+            ->integer('paymentmethod_id')
+            ->allowEmptyString('paymentmethod_id');
+
+        $validator
+            ->scalar('description')
+            ->allowEmptyString('description');
 
         $validator
             ->scalar('interval')

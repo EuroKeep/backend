@@ -1,13 +1,27 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code.
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
 namespace eurokeep\Model\Entity;
 
-use eurokeep\Model\Table\AccountTable;
-use eurokeep\Model\Table\TransactionsTable;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use DateTime;
+use eurokeep\Model\Table\AccountTable;
+use eurokeep\Model\Table\TransactionsTable;
 
 /**
  * Account Entity
@@ -80,18 +94,18 @@ class Account extends Entity
     /**
      * Streamtransactions
      */
-    public function streamTransactions(DateTime $start, DateTime $end) : array
+    public function streamTransactions(DateTime $start, DateTime $end): array
     {
         $transactionsTable = TableRegistry::getTableLocator()->get('Transactions');
         return $transactionsTable
             ->find()
             ->contain(['Categories'])
             ->where([
-                'Transactions.created >=' => $start->format('Y-m-d'),
-                'Transactions.created <' => $end->format('Y-m-d'),
+                'Transactions.created >=' => $start,
+                'Transactions.created <' => $end,
                 'account_id' => $this->id
             ])
-            ->order(['Transactions.created' => 'DESC'])
+            ->orderByDesc('Transactions.created')
             ->limit(250)
             ->toArray();
 
@@ -100,14 +114,15 @@ class Account extends Entity
     /**
      * Settlement
      */
-    public function settlement(array $transactions): array {
+    public function settlement(array $transactions): array
+    {
         $settlement = [
             'expenses' => 0,
             'revenues' => 0,
             'settlement' => 0
         ];
-        foreach($transactions as $transaction) {
-            if($transaction->balance_value < 0) {
+        foreach ($transactions as $transaction) {
+            if ($transaction->balance_value < 0) {
                 $settlement['expenses'] += $transaction->balance_value;
             } else {
                 $settlement['revenues'] += $transaction->balance_value;
