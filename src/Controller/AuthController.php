@@ -21,6 +21,7 @@ use Authentication\Controller\Component\AuthenticationComponent;
 use Cake\ORM\TableRegistry;
 use eurokeep\Model\Table\UsersTable;
 use JetBrains\PhpStorm\NoReturn;
+use Throwable;
 use Override;
 
 /**
@@ -58,6 +59,7 @@ class AuthController extends AppController
                 $user = $usersTable->get($result->getData()->id);
                 $isLoggedIn = true;
             } catch (Throwable) {
+                // Ignored here: If user is not found or inactive, this is only the init request for the login.
             }
         }
 
