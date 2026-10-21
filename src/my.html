@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>EuroKeep Redirector</title>
+</head>
+<body>
+
+<div id="setup">
+    <h2>Enter your EuroKeep URL</h2>
+    <input type="url" id="myUrl" placeholder="https://your.eurokeep.local:4430">
+    <button id="save">Save &amp; Go</button>
+</div>
+
+<div id="link" style="display:none;">
+    <h1><a href="" id="finalUrl">Öffnen</a></h1>
+</div>
+
+<script>
+    (() => {
+        const storageKey = 'myUrl';
+        const path = window.location.pathname + window.location.search + window.location.hash;
+        const storedUrl = window.localStorage.getItem(storageKey);
+        const box = document.getElementById("link");
+        const finalUrl = document.getElementById("finalUrl");
+        const myUrl = document.getElementById('myUrl');
+
+        if (storedUrl) {
+            const target = storedUrl.replace(/\/$/, '') + path;
+            box.setAttribute("style", null);
+            finalUrl.setAttribute("href", target);
+            myUrl.setAttribute("value", storedUrl);
+
+        }
+
+
+        document.getElementById('save').addEventListener('click', () => {
+            let value = myUrl.value.trim();
+            if (!value) {
+                return;
+            }
+
+            value = value.replace(/\/$/, '');
+
+            window.localStorage.setItem(storageKey, value);
+
+            window.location.reload();
+        });
+    })();
+</script>
+
+</body>
+</html>

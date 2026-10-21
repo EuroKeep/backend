@@ -1,19 +1,27 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code.
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
 namespace eurokeep\Controller;
 
 use Cake\Chronos\Chronos;
-use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\Http\Exception\NotFoundException;
-use Cake\Http\Exception\UnauthorizedException;
 use Cake\Http\Response;
 use eurokeep\Model\Entity\Subscription;
 use eurokeep\Model\Table\SubscriptionTable;
-use InvalidArgumentException;
 use JetBrains\PhpStorm\ObjectShape;
-use Psr\Http\Message\UploadedFileInterface;
-use RuntimeException;
 
 /**
  * Subscription Controller
@@ -112,25 +120,7 @@ class SubscriptionController extends AuthenticatedController
     public function uploadLogo($subscriptionId = null): void
     {
         $this->request->allowMethod(['post']);
-        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'error']);
-
-        $item = $this->Subscription->get((int)$subscriptionId);
-
-        $file = $this->request->getUploadedFile('logo');
-        if (!$file instanceof UploadedFileInterface) {
-            $this->fail(400, 'No logo uploaded');
-        }
-
-        try {
-            $item = $this->Subscription->storeLogo($item, $file);
-        } catch (InvalidArgumentException $exception) {
-            $this->fail(400, $exception->getMessage());
-        } catch (RuntimeException $exception) {
-            $this->fail(500, $exception->getMessage());
-        }
-
-        $this->set('item', $item);
-        $this->set('success', true);
+        $this->uploadLogoEntity($this->Subscription, $subscriptionId, 'Subscription');
     }
 
     /**
@@ -141,19 +131,7 @@ class SubscriptionController extends AuthenticatedController
     public function deleteLogo($subscriptionId = null): void
     {
         $this->request->allowMethod(['delete']);
-        $this->viewBuilder()->setOption('serialize', ['item', 'success', 'error']);
-
-        try {
-            $item = $this->Subscription->get((int)$subscriptionId);
-            $item = $this->Subscription->removeLogo($item);
-        } catch (RecordNotFoundException|UnauthorizedException) {
-            $this->fail(404, 'Subscription not found');
-        } catch (RuntimeException $exception) {
-            $this->fail(500, $exception->getMessage());
-        }
-
-        $this->set('item', $item);
-        $this->set('success', true);
+        $this->deleteLogoEntity($this->Subscription, $subscriptionId, 'Subscription');
     }
 
     /**
@@ -165,22 +143,7 @@ class SubscriptionController extends AuthenticatedController
     {
         $this->request->allowMethod(['get']);
 
-        try {
-            $item = $this->Subscription->get((int)$subscriptionId);
-        } catch (RecordNotFoundException|UnauthorizedException) { // @phpstan-ignore catch.neverThrown, catch.neverThrown (thrown by OwnedTable::get(), hidden by the baked @method get())
-            throw new NotFoundException();
-        }
-
-        $path = $this->Subscription->getLogoPath($item);
-        if ($path === null) {
-            throw new NotFoundException();
-        }
-
-        $mimeType = array_search(pathinfo($path, PATHINFO_EXTENSION), SubscriptionTable::LOGO_MIME_TYPES, true);
-
-        return $this->response
-            ->withFile($path)
-            ->withType((string)$mimeType);
+        return $this->logoEntityResponse($this->Subscription, $subscriptionId);
     }
 
     /**
@@ -231,5 +194,73 @@ class SubscriptionController extends AuthenticatedController
 
         $this->set('forecast', $forecast);
         $this->viewBuilder()->setOption('serialize', ['success', 'forecast']);
+    }
+
+    /**
+     * I will summarize the costs of all active subscriptions (no end date or end date not yet passed).
+     * Subscriptions whose interval cannot be parsed are counted, but excluded from all cost figures.
+     */
+    public function statistics(): void
+    {
+        $this->request->allowMethod(['get']);
+
+        $subscriptions = $this->Subscription->find()
+            ->contain(['Categories'])
+            ->where(['OR' => [
+                'Subscription.end IS' => null,
+                'Subscription.end >=' => Chronos::today()->toDateString(),
+            ]])
+            ->all();
+
+        $annualTotal = 0.0;
+        $priced = 0;
+        $mostExpensive = null;
+        $cheapest = null;
+        $mostExpensiveCost = null;
+        $cheapestCost = null;
+
+        /** @var Subscription $subscription */
+        foreach ($subscriptions as $subscription) {
+            $annualCost = $subscription->getAnnualCost();
+            if ($annualCost === null) {
+                continue;
+            }
+
+            $annualTotal += $annualCost;
+            $priced++;
+
+            // Compare by absolute amount, so it does not matter whether costs are stored as negative values.
+            if ($mostExpensiveCost === null || abs($annualCost) > abs($mostExpensiveCost)) {
+                $mostExpensive = $subscription;
+                $mostExpensiveCost = $annualCost;
+            }
+            if ($cheapestCost === null || abs($annualCost) < abs($cheapestCost)) {
+                $cheapest = $subscription;
+                $cheapestCost = $annualCost;
+            }
+        }
+
+        $monthlyTotal = $annualTotal / 12;
+
+        $statistics = [
+            'count' => $subscriptions->count(),
+            'count_without_interval' => $subscriptions->count() - $priced,
+            'monthly_total' => round($monthlyTotal, 2),
+            'annual_total' => round($annualTotal, 2),
+            'daily_total' => round($annualTotal / 365, 2),
+            'monthly_average' => $priced > 0 ? round($monthlyTotal / $priced, 2) : 0.0,
+            'most_expensive' => $mostExpensive === null ? null : [
+                'subscription' => $mostExpensive,
+                'monthly_cost' => round($mostExpensiveCost / 12, 2),
+            ],
+            'cheapest' => $cheapest === null ? null : [
+                'subscription' => $cheapest,
+                'monthly_cost' => round($cheapestCost / 12, 2),
+            ],
+        ];
+
+        $this->set('statistics', $statistics);
+        $this->set('success', true);
+        $this->viewBuilder()->setOption('serialize', ['statistics', 'success']);
     }
 }

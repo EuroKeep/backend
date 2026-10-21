@@ -1,8 +1,27 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code.
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
 namespace eurokeep\Controller;
 
+use Cake\Chronos\Chronos;
+use Cake\Database\Expression\QueryExpression;
+use Cake\ORM\ResultSet;
+use Cake\ORM\TableRegistry;
+use eurokeep\Model\Entity\Budget;
 use eurokeep\Model\Table\TransactionsTable;
 
 /**
@@ -70,8 +89,14 @@ class BudgetController extends AuthenticatedController
         }
 
         $total['freeValue'] += max(0, $total['total'] + $total['spentValue']);
-        $total['spentPercent'] = min(100, round((-$total['spentValue']) / $total['total'] * 100, 2));
-        $total['freePercent'] = 100 - $total['spentPercent'];
+        // Without any budget limit there is nothing to relate the spending to.
+        if ($total['total'] > 0) {
+            $total['spentPercent'] = min(100, round((-$total['spentValue']) / $total['total'] * 100, 2));
+            $total['freePercent'] = 100 - $total['spentPercent'];
+        } else {
+            $total['spentPercent'] = 0;
+            $total['freePercent'] = 0;
+        }
 
         $this->set('item', $total);
         $this->set('success', true);
@@ -92,6 +117,10 @@ class BudgetController extends AuthenticatedController
             ->contain(['Categories']);
         $items = $budgetQuery->all()->toArray();
 
+        // Category ids (incl. children) already covered by one of the real Budgets above -
+        // anything outside of this set is what the virtual "Unbudgetiert" entry below picks up.
+        $budgetedCategoryIds = [];
+
         /** @var \eurokeep\Model\Entity\Budget $budget */
         foreach ($items as $budget) {
             $budget->category->transactions = $budget->getTransactions($start, $end);
@@ -99,11 +128,79 @@ class BudgetController extends AuthenticatedController
 
             // Type issue here
             $budget->limit = (float)$budget->limit;
+
+            $budgetedCategoryIds[] = $budget->category_id;
+            foreach ($budget->category->getChildren(false)->extract('id') as $childCategoryId) {
+                $budgetedCategoryIds[] = $childCategoryId;
+            }
         }
+
+        //$items[] = $this->getUnbudgetedEntry($start, $end, array_unique($budgetedCategoryIds));
 
         $this->set('items', $items);
         $this->set('success', true);
         $this->viewBuilder()->setOption('serialize', ['items', 'success', 'total']);
+    }
+
+    /**
+     * I will build a virtual, unsaved Budget that groups together every Transaction of the given
+     * time range whose Category is not covered (neither directly nor via a parent/child Category)
+     * by any of the User's real Budgets. This surfaces "Restbudget" spending that would otherwise
+     * not show up under any Budget at all.
+     *
+     * @param Chronos $start Start of the time range to watch for unbudgeted Transactions.
+     * @param Chronos $end End of the time range to watch for unbudgeted Transactions.
+     * @param array<int> $budgetedCategoryIds Ids of every Category already covered by a real Budget.
+     */
+    private function getUnbudgetedEntry(Chronos $start, Chronos $end, array $budgetedCategoryIds): Budget
+    {
+        $accountIds = TableRegistry::getTableLocator()
+            ->get('Account')
+            ->find()
+            ->all()
+            ->extract('id')
+            ->toArray();
+
+        if (empty($accountIds)) {
+            $transactions = new ResultSet([]);
+        } else {
+            $transactionsQuery = TableRegistry::getTableLocator()
+                ->get('Transactions')
+                ->find()
+                ->where([
+                    'Account.id IN' => $accountIds,
+                    'Transactions.created >=' => $start,
+                    'Transactions.created <' => $end,
+                ])
+                ->contain(['Account', 'Categories']);
+
+            if (!empty($budgetedCategoryIds)) {
+                $transactionsQuery->andWhere(fn(QueryExpression $exp) => $exp->or([
+                    'Transactions.category_id IS' => null,
+                    'Transactions.category_id NOT IN' => $budgetedCategoryIds,
+                ]));
+            }
+
+            $transactions = $transactionsQuery
+                ->orderBy(['Transactions.created' => 'DESC'])
+                ->all();
+        }
+
+        /** @var Budget $unbudgeted */
+        $unbudgeted = $this->Budget->newEmptyEntity();
+        $unbudgeted->name = 'Unbudgetiert';
+        $unbudgeted->limit = 0.0;
+        $unbudgeted->currency = 'eur';
+        $unbudgeted->virtual = true;
+
+        $unbudgeted->category = $this->Budget->Categories->newEmptyEntity();
+        $unbudgeted->category->name = 'Unbudgetiert';
+        $unbudgeted->category->emoji = '❓';
+        $unbudgeted->category->transactions = $transactions;
+
+        $unbudgeted->spent = TransactionsTable::summarize($transactions);
+
+        return $unbudgeted;
     }
 
     /**

@@ -1,0 +1,1533 @@
+2026-09-25 09:57:20 error: [Cake\Http\Exception\MissingControllerException] Controller class `Pages` could not be found. in /var/www/html/vendor/cakephp/cakephp/src/Controller/ControllerFactory.php on line 363
+Exception Attributes: array (
+  'controller' => 'Pages',
+  'plugin' => NULL,
+  'prefix' => NULL,
+  '_ext' => NULL,
+)
+Stack Trace:
+- CORE/src/Controller/ControllerFactory.php:79
+- CORE/src/Http/BaseApplication.php:382
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:159
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:157
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /
+Client IP: 192.168.69.100
+2026-09-25 09:57:22 error: [Cake\Http\Exception\MissingControllerException] Controller class `Pages` could not be found. in /var/www/html/vendor/cakephp/cakephp/src/Controller/ControllerFactory.php on line 363
+Exception Attributes: array (
+  'controller' => 'Pages',
+  'plugin' => NULL,
+  'prefix' => NULL,
+  '_ext' => NULL,
+)
+Stack Trace:
+- CORE/src/Controller/ControllerFactory.php:79
+- CORE/src/Http/BaseApplication.php:382
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:159
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:157
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /
+Client IP: 192.168.69.100
+2026-09-25 21:57:57 error: [Cake\Http\Exception\MissingControllerException] Controller class `CdnCgi` could not be found. in /var/www/html/vendor/cakephp/cakephp/src/Controller/ControllerFactory.php on line 363
+Exception Attributes: array (
+  'controller' => 'CdnCgi',
+  'plugin' => NULL,
+  'prefix' => NULL,
+  '_ext' => NULL,
+)
+Stack Trace:
+- CORE/src/Controller/ControllerFactory.php:79
+- CORE/src/Http/BaseApplication.php:382
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:159
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:157
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/challenge-platform/scripts/jsd/main.js
+Client IP: 192.168.69.100
+2026-09-25 21:57:57 error: [Cake\Http\Exception\InvalidCsrfTokenException] Missing or incorrect CSRF cookie type. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 354
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-25 21:57:57 error: [Cake\Http\Exception\InvalidCsrfTokenException] Missing or incorrect CSRF cookie type. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 354
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-25 21:57:57 error: [Cake\Http\Exception\InvalidCsrfTokenException] Missing or incorrect CSRF cookie type. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 354
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-25 21:58:01 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-25 21:58:01 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-25 21:58:09 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/home
+Client IP: 192.168.69.100
+2026-09-25 21:58:09 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/home
+Client IP: 192.168.69.100
+2026-09-25 21:58:11 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile
+Client IP: 192.168.69.100
+2026-09-25 21:58:11 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile
+Client IP: 192.168.69.100
+2026-09-25 21:58:19 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/budget/list
+Client IP: 192.168.69.100
+2026-09-25 21:58:19 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/budget/list
+Client IP: 192.168.69.100
+2026-09-25 21:58:22 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/saving/list
+Client IP: 192.168.69.100
+2026-09-25 21:58:22 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/saving/list
+Client IP: 192.168.69.100
+2026-09-25 21:58:26 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/subscription/list
+Client IP: 192.168.69.100
+2026-09-25 21:58:26 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/analyzer/month
+Client IP: 192.168.69.100
+2026-09-25 21:58:27 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/analyzer/month
+Client IP: 192.168.69.100
+2026-09-25 21:58:27 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/subscription/list
+Client IP: 192.168.69.100
+2026-09-25 21:58:29 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/analyzer/month/2026/9
+Client IP: 192.168.69.100
+2026-09-26 13:26:38 error: [Cake\Database\Exception\MissingConnectionException] Connection to Mysql could not be established: SQLSTATE[HY000] [1045] Access denied for user 'eurokeep'@'172.18.0.4' (using password: YES) in /var/www/html/vendor/cakephp/cakephp/src/Database/Driver.php on line 204
+Exception Attributes: array (
+  'driver' => 'Mysql',
+  'reason' => 'SQLSTATE[HY000] [1045] Access denied for user \'eurokeep\'@\'172.18.0.4\' (using password: YES)',
+)
+Stack Trace:
+- CORE/src/Database/Driver/Mysql.php:218
+- CORE/src/Database/Schema/SchemaDialect.php:60
+- CORE/src/Database/Driver/Mysql.php:264
+- CORE/src/Database/Schema/Collection.php:97
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Caused by: [PDOException] SQLSTATE[HY000] [1045] Access denied for user 'eurokeep'@'172.18.0.4' (using password: YES) in /var/www/html/vendor/cakephp/cakephp/src/Database/Driver.php on line 193
+Stack Trace:
+- CORE/src/Database/Driver.php:193
+- CORE/src/Core/Retry/CommandRetry.php:71
+- CORE/src/Database/Driver.php:202
+- CORE/src/Database/Driver/Mysql.php:218
+- CORE/src/Database/Schema/SchemaDialect.php:60
+- CORE/src/Database/Driver/Mysql.php:264
+- CORE/src/Database/Schema/Collection.php:97
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /auth/login
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-26 13:30:10 error: [Cake\Database\Exception\MissingConnectionException] Connection to Mysql could not be established: SQLSTATE[HY000] [1045] Access denied for user 'eurokeep'@'172.18.0.4' (using password: YES) in /var/www/html/vendor/cakephp/cakephp/src/Database/Driver.php on line 204
+Exception Attributes: array (
+  'driver' => 'Mysql',
+  'reason' => 'SQLSTATE[HY000] [1045] Access denied for user \'eurokeep\'@\'172.18.0.4\' (using password: YES)',
+)
+Stack Trace:
+- CORE/src/Database/Driver/Mysql.php:218
+- CORE/src/Database/Schema/SchemaDialect.php:60
+- CORE/src/Database/Driver/Mysql.php:264
+- CORE/src/Database/Schema/Collection.php:97
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Caused by: [PDOException] SQLSTATE[HY000] [1045] Access denied for user 'eurokeep'@'172.18.0.4' (using password: YES) in /var/www/html/vendor/cakephp/cakephp/src/Database/Driver.php on line 193
+Stack Trace:
+- CORE/src/Database/Driver.php:193
+- CORE/src/Core/Retry/CommandRetry.php:71
+- CORE/src/Database/Driver.php:202
+- CORE/src/Database/Driver/Mysql.php:218
+- CORE/src/Database/Schema/SchemaDialect.php:60
+- CORE/src/Database/Driver/Mysql.php:264
+- CORE/src/Database/Schema/Collection.php:97
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /auth/login
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-26 13:30:38 error: [Cake\Database\Exception\MissingConnectionException] Connection to Mysql could not be established: SQLSTATE[HY000] [2002] Connection refused in /var/www/html/vendor/cakephp/cakephp/src/Database/Driver.php on line 204
+Exception Attributes: array (
+  'driver' => 'Mysql',
+  'reason' => 'SQLSTATE[HY000] [2002] Connection refused',
+)
+Stack Trace:
+- CORE/src/Database/Driver/Mysql.php:218
+- CORE/src/Database/Schema/SchemaDialect.php:60
+- CORE/src/Database/Driver/Mysql.php:264
+- CORE/src/Database/Schema/Collection.php:97
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Caused by: [PDOException] SQLSTATE[HY000] [2002] Connection refused in /var/www/html/vendor/cakephp/cakephp/src/Database/Driver.php on line 193
+Stack Trace:
+- CORE/src/Database/Driver.php:193
+- CORE/src/Core/Retry/CommandRetry.php:71
+- CORE/src/Database/Driver.php:202
+- CORE/src/Database/Driver/Mysql.php:218
+- CORE/src/Database/Schema/SchemaDialect.php:60
+- CORE/src/Database/Driver/Mysql.php:264
+- CORE/src/Database/Schema/Collection.php:97
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /auth/login
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-26 13:30:42 error: [Cake\Database\Exception\DatabaseException] Could not describe columns on `users` in /var/www/html/vendor/cakephp/cakephp/src/Database/Schema/MysqlSchemaDialect.php on line 127
+Stack Trace:
+- CORE/src/Database/Schema/SchemaDialect.php:434
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Caused by: [Cake\Database\Exception\QueryException] [default] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eurokeep.users' doesn't exist
+Query: SHOW FULL COLUMNS FROM `users` in /var/www/html/vendor/cakephp/cakephp/src/Database/Driver.php on line 391
+Stack Trace:
+- CORE/src/Database/Driver.php:338
+- CORE/src/Database/Driver.php:304
+- CORE/src/Database/Schema/MysqlSchemaDialect.php:125
+- CORE/src/Database/Schema/SchemaDialect.php:434
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Caused by: [PDOException] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eurokeep.users' doesn't exist in /var/www/html/vendor/cakephp/cakephp/src/Database/Statement/Statement.php on line 143
+Stack Trace:
+- CORE/src/Database/Statement/Statement.php:143
+- CORE/src/Database/Driver.php:336
+- CORE/src/Database/Driver.php:304
+- CORE/src/Database/Schema/MysqlSchemaDialect.php:125
+- CORE/src/Database/Schema/SchemaDialect.php:434
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /auth/login
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-26 13:30:43 error: [Cake\Database\Exception\DatabaseException] Could not describe columns on `users` in /var/www/html/vendor/cakephp/cakephp/src/Database/Schema/MysqlSchemaDialect.php on line 127
+Stack Trace:
+- CORE/src/Database/Schema/SchemaDialect.php:434
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Caused by: [Cake\Database\Exception\QueryException] [default] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eurokeep.users' doesn't exist
+Query: SHOW FULL COLUMNS FROM `users` in /var/www/html/vendor/cakephp/cakephp/src/Database/Driver.php on line 391
+Stack Trace:
+- CORE/src/Database/Driver.php:338
+- CORE/src/Database/Driver.php:304
+- CORE/src/Database/Schema/MysqlSchemaDialect.php:125
+- CORE/src/Database/Schema/SchemaDialect.php:434
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Caused by: [PDOException] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eurokeep.users' doesn't exist in /var/www/html/vendor/cakephp/cakephp/src/Database/Statement/Statement.php on line 143
+Stack Trace:
+- CORE/src/Database/Statement/Statement.php:143
+- CORE/src/Database/Driver.php:336
+- CORE/src/Database/Driver.php:304
+- CORE/src/Database/Schema/MysqlSchemaDialect.php:125
+- CORE/src/Database/Schema/SchemaDialect.php:434
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /auth/login
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-26 13:30:48 error: [Cake\Database\Exception\DatabaseException] Could not describe columns on `users` in /var/www/html/vendor/cakephp/cakephp/src/Database/Schema/MysqlSchemaDialect.php on line 127
+Stack Trace:
+- CORE/src/Database/Schema/SchemaDialect.php:434
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Caused by: [Cake\Database\Exception\QueryException] [default] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eurokeep.users' doesn't exist
+Query: SHOW FULL COLUMNS FROM `users` in /var/www/html/vendor/cakephp/cakephp/src/Database/Driver.php on line 391
+Stack Trace:
+- CORE/src/Database/Driver.php:338
+- CORE/src/Database/Driver.php:304
+- CORE/src/Database/Schema/MysqlSchemaDialect.php:125
+- CORE/src/Database/Schema/SchemaDialect.php:434
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Caused by: [PDOException] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'eurokeep.users' doesn't exist in /var/www/html/vendor/cakephp/cakephp/src/Database/Statement/Statement.php on line 143
+Stack Trace:
+- CORE/src/Database/Statement/Statement.php:143
+- CORE/src/Database/Driver.php:336
+- CORE/src/Database/Driver.php:304
+- CORE/src/Database/Schema/MysqlSchemaDialect.php:125
+- CORE/src/Database/Schema/SchemaDialect.php:434
+- CORE/src/Database/Schema/Collection.php:87
+- CORE/src/Database/Schema/CachedCollection.php:107
+- CORE/src/ORM/Table.php:531
+- APP/Model/Table/UsersTable.php:64
+- CORE/src/ORM/Table.php:337
+- CORE/src/ORM/Locator/TableLocator.php:311
+- CORE/src/ORM/Locator/TableLocator.php:264
+- CORE/src/Datasource/Locator/AbstractLocator.php:71
+- CORE/src/ORM/Locator/TableLocator.php:204
+- ROOT/vendor/cakephp/authentication/src/Identifier/Resolver/OrmResolver.php:58
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:162
+- ROOT/vendor/cakephp/authentication/src/Identifier/PasswordIdentifier.php:104
+- ROOT/vendor/cakephp/authentication/src/Authenticator/FormAuthenticator.php:161
+- ROOT/vendor/cakephp/authentication/src/AuthenticationService.php:159
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:84
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /auth/login
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-26 13:39:31 error: [DivisionByZeroError] Division by zero in /var/www/html/src/Controller/BudgetController.php on line 78
+Stack Trace:
+- CORE/src/Controller/Controller.php:521
+- CORE/src/Controller/ControllerFactory.php:168
+- CORE/src/Controller/ControllerFactory.php:143
+- CORE/src/Http/BaseApplication.php:384
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:169
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:157
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /budget/total
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/home
+Client IP: 192.168.69.100
+2026-09-26 13:50:08 error: [Cake\Datasource\Exception\RecordNotFoundException] Record not found in table `transactions`. in /var/www/html/vendor/cakephp/cakephp/src/ORM/Query/SelectQuery.php on line 607
+Stack Trace:
+- APP/Controller/TransactionsController.php:154
+- CORE/src/Controller/Controller.php:521
+- CORE/src/Controller/ControllerFactory.php:168
+- CORE/src/Controller/ControllerFactory.php:143
+- CORE/src/Http/BaseApplication.php:384
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:169
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /transactions/mapping
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/transaction/add/1
+Client IP: 192.168.69.100
+2026-09-26 13:50:08 error: [Cake\Datasource\Exception\RecordNotFoundException] Record not found in table `transactions`. in /var/www/html/vendor/cakephp/cakephp/src/ORM/Query/SelectQuery.php on line 607
+Stack Trace:
+- APP/Controller/TransactionsController.php:154
+- CORE/src/Controller/Controller.php:521
+- CORE/src/Controller/ControllerFactory.php:168
+- CORE/src/Controller/ControllerFactory.php:143
+- CORE/src/Http/BaseApplication.php:384
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:169
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /transactions/mapping
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/transaction/add/1
+Client IP: 192.168.69.100
+2026-09-26 13:50:08 error: [Cake\Datasource\Exception\RecordNotFoundException] Record not found in table `transactions`. in /var/www/html/vendor/cakephp/cakephp/src/ORM/Query/SelectQuery.php on line 607
+Stack Trace:
+- APP/Controller/TransactionsController.php:154
+- CORE/src/Controller/Controller.php:521
+- CORE/src/Controller/ControllerFactory.php:168
+- CORE/src/Controller/ControllerFactory.php:143
+- CORE/src/Http/BaseApplication.php:384
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:169
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /transactions/mapping
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/transaction/add/1
+Client IP: 192.168.69.100
+2026-09-26 13:50:20 error: [DivisionByZeroError] Division by zero in /var/www/html/src/Controller/BudgetController.php on line 78
+Stack Trace:
+- CORE/src/Controller/Controller.php:521
+- CORE/src/Controller/ControllerFactory.php:168
+- CORE/src/Controller/ControllerFactory.php:143
+- CORE/src/Http/BaseApplication.php:384
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:169
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:157
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /budget/total
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/home
+Client IP: 192.168.69.100
+2026-09-26 13:50:22 error: [DivisionByZeroError] Division by zero in /var/www/html/src/Controller/BudgetController.php on line 78
+Stack Trace:
+- CORE/src/Controller/Controller.php:521
+- CORE/src/Controller/ControllerFactory.php:168
+- CORE/src/Controller/ControllerFactory.php:143
+- CORE/src/Http/BaseApplication.php:384
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:169
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:157
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /budget/total
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/home
+Client IP: 192.168.69.100
+2026-09-26 13:58:21 error: [Cake\Database\Exception\QueryException] [default] SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row: a foreign key constraint fails (`eurokeep`.`subscription`, CONSTRAINT `fk_subscription_paymentmethod_id` FOREIGN KEY (`paymentmethod_id`) REFERENCES `payment_method` (`id`) ON UPDATE NO ACTION)
+Query: INSERT INTO `subscription` (`created`, `modified`, `name`, `account_id`, `balance_value`, `interval`, `start`, `end`, `user_id`, `category_id`) VALUES ('2026-09-26 13:58:21', '2026-09-26 13:58:21', 'test', 1, '-35', '1', '2026-02-01', NULL, 1, 1) in /var/www/html/vendor/cakephp/cakephp/src/Database/Driver.php on line 391
+Stack Trace:
+- CORE/src/Database/Driver.php:338
+- CORE/src/Database/Driver/Mysql.php:243
+- CORE/src/Database/Connection.php:317
+- CORE/src/Core/Retry/CommandRetry.php:71
+- CORE/src/Database/Connection.php:317
+- CORE/src/Database/Query.php:239
+- CORE/src/ORM/Table.php:2329
+- CORE/src/ORM/Table.php:2222
+- CORE/src/ORM/Table.php:2113
+- CORE/src/Database/Connection.php:718
+- CORE/src/ORM/Table.php:1717
+- CORE/src/ORM/Table.php:2112
+- APP/Controller/AuthenticatedController.php:281
+- APP/Controller/SubscriptionController.php:70
+- CORE/src/Controller/Controller.php:521
+- CORE/src/Controller/ControllerFactory.php:168
+- CORE/src/Controller/ControllerFactory.php:143
+- CORE/src/Http/BaseApplication.php:384
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:169
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Caused by: [PDOException] SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row: a foreign key constraint fails (`eurokeep`.`subscription`, CONSTRAINT `fk_subscription_paymentmethod_id` FOREIGN KEY (`paymentmethod_id`) REFERENCES `payment_method` (`id`) ON UPDATE NO ACTION) in /var/www/html/vendor/cakephp/cakephp/src/Database/Statement/Statement.php on line 143
+Stack Trace:
+- CORE/src/Database/Statement/Statement.php:143
+- CORE/src/Database/Driver.php:336
+- CORE/src/Database/Driver/Mysql.php:243
+- CORE/src/Database/Connection.php:317
+- CORE/src/Core/Retry/CommandRetry.php:71
+- CORE/src/Database/Connection.php:317
+- CORE/src/Database/Query.php:239
+- CORE/src/ORM/Table.php:2329
+- CORE/src/ORM/Table.php:2222
+- CORE/src/ORM/Table.php:2113
+- CORE/src/Database/Connection.php:718
+- CORE/src/ORM/Table.php:1717
+- CORE/src/ORM/Table.php:2112
+- APP/Controller/AuthenticatedController.php:281
+- APP/Controller/SubscriptionController.php:70
+- CORE/src/Controller/Controller.php:521
+- CORE/src/Controller/ControllerFactory.php:168
+- CORE/src/Controller/ControllerFactory.php:143
+- CORE/src/Http/BaseApplication.php:384
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:169
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /subscription/add
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/subscription/add
+Client IP: 192.168.69.100
+2026-09-27 06:00:23 error: [Cake\Http\Exception\MissingControllerException] Controller class `CdnCgi` could not be found. in /var/www/html/vendor/cakephp/cakephp/src/Controller/ControllerFactory.php on line 363
+Exception Attributes: array (
+  'controller' => 'CdnCgi',
+  'plugin' => NULL,
+  'prefix' => NULL,
+  '_ext' => NULL,
+)
+Stack Trace:
+- CORE/src/Controller/ControllerFactory.php:79
+- CORE/src/Http/BaseApplication.php:382
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:159
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:157
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/challenge-platform/scripts/jsd/main.js
+Client IP: 192.168.69.100
+2026-09-27 06:00:23 error: [Cake\Http\Exception\InvalidCsrfTokenException] Missing or incorrect CSRF cookie type. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 354
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-27 06:00:23 error: [Cake\Http\Exception\InvalidCsrfTokenException] Missing or incorrect CSRF cookie type. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 354
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-27 06:00:23 error: [Cake\Http\Exception\InvalidCsrfTokenException] Missing or incorrect CSRF cookie type. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 354
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-27 06:00:26 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-27 06:00:26 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/login
+Client IP: 192.168.69.100
+2026-09-27 06:00:31 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/home
+Client IP: 192.168.69.100
+2026-09-27 06:00:31 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/home
+Client IP: 192.168.69.100
+2026-09-27 06:01:03 error: [Cake\Http\Exception\InvalidCsrfTokenException] CSRF token from either the request body or request headers did not match or is missing. in /var/www/html/vendor/cakephp/cakephp/src/Http/Middleware/CsrfProtectionMiddleware.php on line 381
+Stack Trace:
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:165
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:172
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /cdn-cgi/rum
+Referer URL: https://eurokeep.nox.kiwi/a/mobile/subscription/list
+Client IP: 192.168.69.100
+2026-09-27 18:23:47 error: [Cake\Http\Exception\MissingControllerException] Controller class `Users` could not be found. in /var/www/html/vendor/cakephp/cakephp/src/Controller/ControllerFactory.php on line 363
+Exception Attributes: array (
+  'controller' => 'Users',
+  'plugin' => NULL,
+  'prefix' => NULL,
+  '_ext' => NULL,
+)
+Stack Trace:
+- CORE/src/Controller/ControllerFactory.php:79
+- CORE/src/Http/BaseApplication.php:382
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:159
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:157
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /users/login
+Client IP: 127.0.0.1
+2026-09-27 18:23:52 error: [Cake\Http\Exception\MissingControllerException] Controller class `Pages` could not be found. in /var/www/html/vendor/cakephp/cakephp/src/Controller/ControllerFactory.php on line 363
+Exception Attributes: array (
+  'controller' => 'Pages',
+  'plugin' => NULL,
+  'prefix' => NULL,
+  '_ext' => NULL,
+)
+Stack Trace:
+- CORE/src/Controller/ControllerFactory.php:79
+- CORE/src/Http/BaseApplication.php:382
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:159
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:157
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /
+Client IP: 127.0.0.1
+2026-09-27 18:23:52 error: [Cake\Http\Exception\MissingControllerException] Controller class `Users` could not be found. in /var/www/html/vendor/cakephp/cakephp/src/Controller/ControllerFactory.php on line 363
+Exception Attributes: array (
+  'controller' => 'Users',
+  'plugin' => NULL,
+  'prefix' => NULL,
+  '_ext' => NULL,
+)
+Stack Trace:
+- CORE/src/Controller/ControllerFactory.php:79
+- CORE/src/Http/BaseApplication.php:382
+- CORE/src/Http/Runner.php:86
+- CORE/src/Http/Middleware/CsrfProtectionMiddleware.php:159
+- CORE/src/Http/Runner.php:82
+- ROOT/vendor/cakephp/authentication/src/Middleware/AuthenticationMiddleware.php:103
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Middleware/BodyParserMiddleware.php:157
+- CORE/src/Http/Runner.php:82
+- CORE/src/Routing/Middleware/RoutingMiddleware.php:118
+- CORE/src/Http/Runner.php:82
+- CORE/src/Error/Middleware/ErrorHandlerMiddleware.php:111
+- CORE/src/Http/Runner.php:82
+- CORE/src/Http/Runner.php:60
+- CORE/src/Http/Server.php:93
+- ROOT/webroot/index.php:37
+- ROOT/index.php:16
+- [main]:
+
+Request URL: /users/login
+Client IP: 127.0.0.1

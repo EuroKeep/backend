@@ -1,0 +1,463 @@
+// EuroKeep – Datenbank-Dokumentation (DBML)
+//
+// Quelle: config/Migrations/*.php (Migrations\BaseMigration, Phinx-Stil) + src/Model/Table/*.php
+// (CakePHP-Validatoren/Assoziationen) + src/Model/Entity/*.php (Docblocks) + ein lokaler
+// Schema-Snapshot `config/Migrations/schema-dump-default.lock` (Stand 2026-08-24, 18:00 Uhr).
+//
+// WICHTIGER HINWEIS ZUR VERLÄSSLICHKEIT DIESES DOKUMENTS:
+// Diese Datei bildet in erster Linie den durch die Migrationsdateien BESCHRIEBENEN
+// (intendierten) Schema-Stand ab, ergänzt um Erkenntnisse aus dem Code (Table-Klassen,
+// Entity-Docblocks) und Abgleich gegen den lokalen Schema-Snapshot. Es gibt mehrfach
+// dokumentierte Abweichungen zwischen "was die Migration beschreibt" und "was der
+// Snapshot tatsächlich zeigt" - siehe die Notizen an den betroffenen Tabellen/Spalten
+// und die Zusammenfassung ganz unten. Vor dem produktiven Vertrauen auf Details wie
+// exakte Spaltenlängen/Typen/Defaults: gegen die tatsächlich laufende Instanz verifizieren.
+//
+// Migrations verwenden durchgängig das Muster `if (!$this->hasTable('xyz')) { ...create()... }`.
+// Das bedeutet: Spalten, die einer Tabelle NACH ihrer ursprünglichen Erstellung in derselben
+// Migrationsdatei hinzugefügt wurden (z. B. `users.api_key`, `transactions.user_id`), werden
+// von Phinx/CakePHP-Migrations NICHT automatisch nachgezogen, wenn die Migration in der
+// Ziel-Datenbank bereits als "migrated" vermerkt ist - Phinx führt eine bereits angewendete
+// Migration nicht erneut aus, unabhängig davon, ob ihr Code sich seither geändert hat.
+// Ob diese beiden Spalten in JEDER Zielumgebung tatsächlich existieren, sollte vor dem
+// Publizieren dieses Diagramms geprüft werden (ggf. per `DESCRIBE users;`/`DESCRIBE transactions;`
+// oder einer frischen, expliziten ALTER-Migration statt der nachträglichen Code-Änderung).
+
+Project EuroKeep {
+  database_type: 'MySQL (MariaDB)'
+  Note: '''
+    # EuroKeep – Haushaltsbuch / Finance Manager
+
+    Backend: CakePHP 5 (`src/`), reines JSON-API, kein serverseitiges Rendering.
+    Frontend: Angular-SPA (separates, nicht in diesem Repo versioniertes Verzeichnis `frontend/`).
+
+    ## Mandantenmodell
+    Fast alle fachlichen Tabellen sind strikt pro Benutzer getrennt (`user_id`-Spalte,
+    serverseitig automatisch über `OwnedTable`/`UserOwnedBehavior` erzwungen - sowohl beim
+    Lesen (`beforeFind` hängt `WHERE user_id = :currentUser` an) als auch beim Schreiben
+    (`beforeSave` überschreibt ein vom Client mitgeschicktes `user_id` immer mit dem
+    eingeloggten Benutzer)): `account`, `budget`, `subscription`, `piggybank`, `transactions`.
+
+    Zwei Tabellen sind bewusst GLOBAL/geteilt (keine `user_id`-Spalte, für alle Benutzer
+    gleich sichtbar und bearbeitbar): `categories` (Kategorie-Baum) und `accounttype`
+    (Kontotyp-Liste). Das ist zugleich eine bekannte Autorisierungslücke: aktuell kann JEDER
+    eingeloggte Benutzer diese globalen Referenzdaten anlegen/ändern/löschen, ein Rollen-Check
+    (`role`/`role_id` existiert als Tabelle, wird aber nirgends im Code ausgewertet) fehlt.
+    Details siehe `docs/SECURITY_REVIEW.md`, Fund "Keine Autorisierungs-/Rollenprüfung".
+
+    ## Authentifizierung
+    Zwei parallele Wege (`src/Application.php::getAuthenticationService()`):
+    - **Session/Form** (E-Mail + Passwort, bcrypt-artig gehasht über `DefaultPasswordHasher`) -
+      das nutzt die Angular-SPA.
+    - **Apikey/Bearer** (`Authorization: Bearer <api_key>`) - eigenständiges, per CSPRNG
+      erzeugtes Secret in `users.api_key` (1024 Bit Entropie, erzeugt via
+      `src/Command/UserRotateKeyCommand.php`). Historisch war dieses Feld schlicht die
+      E-Mail-Adresse des Nutzers (kein echtes Secret) - das wurde inzwischen behoben.
+
+    ## Geldbeträge
+    Vorzeichenbehaftete `DECIMAL(15,2)`-Spalten (Ausgaben negativ, Einnahmen positiv) sind der
+    Standard. Einzelne Tabellen ohne eigene Migration (`piggybank`) bzw. mit älteren,
+    ungeprüften Spalten zeigten in einem lokalen Schema-Snapshot stattdessen `FLOAT` - siehe
+    Notizen an den betroffenen Spalten.
+
+    ## Begleitdokumente in diesem Repo
+    - `docs/SECURITY_REVIEW.md` - Sicherheitsanalyse (Autorisierung, Auth, CSRF, CORS, OWASP-Mapping).
+    - `CLAUDE.md` - laufende Architektur-/Datenmodell-Analyse inkl. Historie der bekannten
+      Schema-Inkonsistenzen (dort teils ausführlicher hergeleitet als hier).
+    - `docs/openapi.yaml` - API-Beschreibung.
+  '''
+}
+
+// ---------------------------------------------------------------------------
+// Referenz-/Stammdaten (global, nicht pro Benutzer getrennt)
+// ---------------------------------------------------------------------------
+
+Table role {
+  id integer [pk, increment, note: 'Primärschlüssel']
+  created datetime [not null, default: `CURRENT_TIMESTAMP`]
+  modified datetime [not null, default: `CURRENT_TIMESTAMP`]
+  flags integer [not null, default: 0, note: 'Undokumentierte Bitmask-Reserve. Für `role` bislang kein Bit im Code interpretiert.']
+  name varchar(128) [not null, note: 'Anzeigename der Rolle, z. B. "admin", "user".']
+
+  Note: '''
+    Einfaches RBAC-Grundgerüst. `users.role_id` referenziert diese Tabelle, aber **keine
+    Controller-Aktion im Code prüft `role_id`** - die Rolle wird aktuell nirgends zur
+    Autorisierung ausgewertet (siehe `docs/SECURITY_REVIEW.md`, Fund "Keine
+    Autorisierungs-/Rollenprüfung trotz vorhandenem Rollenmodell"). Effektiv sind alle
+    eingeloggten Benutzer gleichberechtigt, unabhängig von ihrer Rolle.
+  '''
+}
+
+Table accounttype {
+  id integer [pk, increment]
+  created datetime [not null, default: `CURRENT_TIMESTAMP`]
+  modified datetime [not null, default: `CURRENT_TIMESTAMP`]
+  flags integer [not null, default: 0, note: 'Undokumentierte Bitmask-Reserve, im Code nicht ausgewertet.']
+  name varchar(128) [not null, note: 'z. B. "Girokonto", "Bargeld", "Kreditkarte".']
+
+  Note: '''
+    Globale, von allen Benutzern gemeinsam genutzte Liste von Kontotypen (keine
+    `user_id`-Spalte). Jeder eingeloggte Benutzer kann per API Einträge anlegen/ändern/löschen
+    - betrifft dann alle anderen Benutzer mit, da die Liste geteilt ist (siehe Security Review).
+    `ON DELETE RESTRICT` von `account.accounttype_id` verhindert nur das Löschen eines
+    Kontotyps, der noch von mindestens einem Konto (irgendeines Benutzers) verwendet wird.
+  '''
+}
+
+Table categories {
+  id integer [pk, increment]
+  created datetime [default: `CURRENT_TIMESTAMP`, note: 'Nullable in der Migration (Sonderfall gegenüber den meisten anderen Tabellen).']
+  modified datetime [default: `CURRENT_TIMESTAMP`]
+  flags integer [not null, default: 0, note: 'Undokumentierte Bitmask-Reserve, im Code nicht ausgewertet.']
+  emoji varchar(16) [not null, note: 'Emoji-Icon der Kategorie. 16 Zeichen können bei komplexen Emoji-Sequenzen (ZWJ, Hauttonmodifikator) knapp werden.']
+  name varchar(128) [not null]
+  parent_id integer [note: 'Self-Referenz für den Kategorie-Baum. NULL = Wurzelkategorie. `ON DELETE SET NULL`.']
+  lft integer [not null, default: 0, note: 'Nested-Set-Grenze links (CakePHP `TreeBehavior`).']
+  rght integer [not null, default: 0, note: 'Nested-Set-Grenze rechts (CakePHP `TreeBehavior`).']
+
+  indexes {
+    (parent_id) [name: 'idx_categories_parent_id']
+  }
+
+  Note: '''
+    Globaler, geteilter Kategorie-Baum (Nested-Set-Modell über `lft`/`rght`, gepflegt durch
+    CakePHPs `TreeBehavior`) - **keine `user_id`-Spalte**, alle Benutzer sehen denselben Baum
+    und können ihn per API verändern (gleiche Autorisierungslücke wie `accounttype`, s. o.).
+    Wird von `budget.category_id`, `subscription.category_id` und `transactions.category_id`
+    referenziert.
+  '''
+}
+
+// ---------------------------------------------------------------------------
+// Benutzerverwaltung
+// ---------------------------------------------------------------------------
+
+Table users {
+  id integer [pk, increment]
+  created datetime [not null, default: `CURRENT_TIMESTAMP`]
+  modified datetime [not null, default: `CURRENT_TIMESTAMP`]
+  flags integer [not null, default: 0, note: 'Bitmask, unvollständig. `setPassword()`/`setApiKey()` in `UsersTable` setzen `flags = 3` mit Kommentar "Make this a binary operation!" im Code - erkennbar unfertig, Bit-Bedeutung nicht dokumentiert.']
+  name varchar(128) [not null, note: 'Anzeigename des Benutzers.']
+  email varchar(128) [not null, unique, note: 'Login-Identifier (Form-Authenticator, Feld `username` im Request wird auf `email` gemappt).']
+  password varchar(128) [not null, note: 'Gehasht über `Authentication.DefaultPasswordHasher` (bcrypt-artig). Im JSON-Output über `User::$_hidden` versteckt.']
+  api_key varchar(256) [null, note: '''
+    Bearer-Credential für die zustandslose API-Authentifizierung (`ApikeyIdentifier`).
+    Erzeugt via `bin2hex(random_bytes(128))` (1024 Bit CSPRNG-Entropie) durch
+    `src/Command/UserRotateKeyCommand.php`, danach nur noch einmalig im Klartext angezeigt.
+    ⚠ Wird aktuell OHNE Hash im Klartext in dieser Spalte gespeichert (kein Pendant zu
+    `DefaultPasswordHasher` wie bei `password`) und fehlt in `User::$_hidden` - wird dadurch
+    bei jedem Login unnötig im Klartext an den Client zurückgegeben. Kein `UNIQUE`-Index.
+    Siehe `docs/SECURITY_REVIEW.md`, Funde W1/W2 der aktuellen Fassung.
+  ''']
+  settings json [not null, default: '{}', note: '''
+    Freies JSON-Objekt für Benutzereinstellungen, kein festes Schema in der DB.
+    Bekannte, vom Code gelesene/geschriebene Keys:
+    - `SUMMARY_ACCOUNTS` (int[]): Konto-IDs, die in `SummaryController::complete()/closing()`
+      für die Übersicht herangezogen werden.
+    - `helpDisplay` (bool): ob Hilfe-Hinweise im Frontend angezeigt werden.
+  ''']
+  role_id integer [not null, default: 1]
+
+  indexes {
+    (role_id) [name: 'idx_users_role_id']
+    (email) [unique, name: 'idx_users_email']
+  }
+
+  Note: '''
+    Ein Benutzer = ein Mandant. Besitzt `account`, `budget`, `subscription`, `piggybank` und
+    (indirekt über `account`) `transactions`. `ON DELETE RESTRICT` auf allen eingehenden FKs -
+    ein Benutzer kann nicht gelöscht werden, solange noch referenzierende Datensätze existieren
+    (siehe `src/Command/UserDeleteCommand.php`, das stattdessen die zugehörigen Accounts über
+    CakePHPs `dependent`/`cascadeCallbacks`-Assoziation kaskadierend mitlöscht, bevor der
+    User selbst gelöscht wird).
+  '''
+}
+
+// ---------------------------------------------------------------------------
+// Konten & Buchungen (Kernbuchhaltung)
+// ---------------------------------------------------------------------------
+
+Table account {
+  id integer [pk, increment]
+  created datetime [note: 'Nullable, kein Default (Sonderfall gegenüber den meisten anderen Tabellen, die `CURRENT_TIMESTAMP` verwenden).']
+  modified datetime [note: 'Nullable, kein Default.']
+  flags integer [not null, default: 0, note: 'Bit 1 (`flags & 1`): Konto ist "aktiv"/wird in `AccountController::index()` gelistet. Bit 2 (`flags ^ 2`): Favorit, umgeschaltet über `AccountController::toggleFavourite()`. Weitere Bits nicht dokumentiert.']
+  name varchar(100) [not null]
+  emoji varchar(8) [not null, note: 'Icon des Kontos.']
+  iban varchar(50) [null]
+  balance_value decimal(15,2) [not null, note: '''
+    Laufender Kontostand. Wird NICHT manuell gepflegt, sondern automatisch aus der Summe
+    aller `transactions.balance_value` dieses Kontos neu berechnet und gespeichert, sobald
+    sich eine zugehörige Transaction ändert (`Account::summarize()`, aufgerufen aus
+    `TransactionsTable::_onSaveSuccess()`/`::delete()`). Ein lokaler Schema-Snapshot
+    (2026-08-24) zeigte diese Spalte allerdings als `FLOAT` statt `DECIMAL(15,2)` - vor
+    Verlass auf die Präzision den tatsächlichen Spaltentyp der Zielinstanz prüfen.
+  ''']
+  balance_currency varchar(100) [not null, note: 'ISO-4217-Code o. ä., keine DB-seitige Formatprüfung. 100 Zeichen sind für einen 3-stelligen Code deutlich überdimensioniert.']
+  accounttype_id integer [not null]
+  user_id integer [not null]
+
+  indexes {
+    (accounttype_id) [name: 'idx_account_accounttype_id']
+    (user_id) [name: 'idx_account_user_id']
+  }
+
+  Note: '''
+    Ein Bankkonto/Bargeldkonto/Depot etc. eines Benutzers. `ON DELETE RESTRICT` auf
+    `user_id`/`accounttype_id`. Besitzt `transactions` per `dependent: true,
+    cascadeCallbacks: true` - Löschen eines Kontos löscht kaskadierend auch alle seine
+    Transaktionen (echte Owner-Beziehung, bewusst so belassen, im Unterschied zu den
+    entschärften Cascade-Deletes bei `role`→`users` und `accounttype`→`account`).
+  '''
+}
+
+Table transactions {
+  id integer [pk, increment]
+  created datetime [default: `CURRENT_TIMESTAMP`, note: 'Nullable trotz Default.']
+  modified datetime [default: `CURRENT_TIMESTAMP`, note: 'Nullable trotz Default.']
+  flags integer [not null, default: 0, note: 'Wird bei `add()` clientseitig fix auf 1 gesetzt (`TransactionsController::add()`), sonst nicht weiter ausgewertet.']
+  balance_value decimal(15,2) [note: 'Vorzeichenbehafteter Buchungsbetrag (negativ = Ausgabe, positiv = Einnahme). Nullable in der Migration, obwohl der Validator `notEmptyString` fordert.']
+  balance_currency varchar(100) [not null, default: 'EUR']
+  comment varchar(100) [not null, note: 'Freitext-Buchungstext. Ziel der (nicht mandantengetrennten, s. u.) Volltextsuche in `SearchController`/`TransactionsController::mapping()`.']
+  category_id integer [null, note: '`ON DELETE SET NULL` - eine gelöschte Kategorie reißt keine Transaktionen mit.']
+  account_id integer [not null, note: '`ON DELETE RESTRICT`. Wird beim Anlegen/Bearbeiten NICHT gegen den Besitz des aufrufenden Benutzers geprüft (Client kann grundsätzlich ein fremdes Konto referenzieren) - siehe Security Review, Fund zu Cross-Tenant-`account_id`.']
+  transfer_id integer [null, note: 'Self-Referenz: verknüpft die zwei automatisch gegenläufig gebuchten Zeilen eines Konto-zu-Konto-Transfers. `ON DELETE SET NULL`.']
+  piggybank_id integer [null, note: '''
+    ⚠ Existiert als Spalte in einem lokalen Schema-Snapshot (2026-08-24), wird aber in
+    KEINER Migrationsdatei angelegt - vermutlich manuell/ad-hoc per ALTER TABLE ergänzt.
+    Kein FK, kein Index. Wird von `Transaction`-Entity (`_accessible`) und
+    `Piggybank::save()` gelesen/geschrieben. Eine frisch aus den Migrationen aufgesetzte
+    Datenbank hätte diese Spalte vermutlich NICHT.
+  ''']
+  subscription_id integer [null, note: 'Verknüpft eine generierte Buchung mit dem auslösenden Abo. `ON DELETE RESTRICT`.']
+  user_id integer [not null, default: 1, note: '''
+    Denormalisierte Kopie von `account.user_id`, nachträglich ergänzt, um serverseitige
+    Mandantentrennung für Transaktionen zu ermöglichen (`TransactionsTable` erbte zuvor
+    NICHT von `OwnedTable` - vollständiger, ungefilterter Lese-/Schreibzugriff auf alle
+    Transaktionen aller Benutzer war möglich, siehe `docs/SECURITY_REVIEW.md`). Wird jetzt
+    serverseitig automatisch auf den eingeloggten Benutzer erzwungen (`UserOwnedBehavior::
+    beforeSave()`), nicht vom Client kontrollierbar. `default => 1` ist ein Altlast-Muster
+    (analog zum inzwischen für `subscription` entfernten `default => 1`) - ein Insert, der
+    an der Anwendungsvalidierung vorbei erfolgt (Rohzugriff, Seed), würde sonst still
+    Benutzer #1 zugeordnet statt fehlzuschlagen.
+  ''']
+
+  indexes {
+    (account_id) [name: 'idx_transactions_account_id']
+    (category_id) [name: 'idx_transactions_category_id']
+    (transfer_id) [name: 'idx_transactions_transfer_id']
+    (user_id) [name: 'idx_transactions_user_id']
+    (created) [name: 'idx_transactions_created']
+    (subscription_id) [name: 'idx_transactions_subscription_id']
+  }
+
+  Note: '''
+    Einzelne Buchung auf einem Konto. Kernentität der Anwendung. Ein Konto-zu-Konto-Transfer
+    besteht aus zwei Zeilen (je Konto eine, gegenläufiges Vorzeichen), verknüpft über
+    `transfer_id`. Jede Änderung/Löschung einer Transaction löst automatisch eine
+    Neuberechnung von `account.balance_value` aus (`Account::summarize()`).
+  '''
+}
+
+// ---------------------------------------------------------------------------
+// Planung: Budgets & Abos
+// ---------------------------------------------------------------------------
+
+Table budget {
+  id integer [pk, increment]
+  created datetime [not null, default: `CURRENT_TIMESTAMP`]
+  modified datetime [not null, default: `CURRENT_TIMESTAMP`]
+  flags integer [not null, default: 0, note: 'Undokumentierte Bitmask-Reserve, im Code nicht ausgewertet.']
+  name varchar(128) [not null]
+  limit decimal(15,2) [not null, default: 0, note: 'Ausgaben-Obergrenze für die Kategorie im Abrechnungszeitraum. Lokaler Schema-Snapshot zeigte diese Spalte als `FLOAT` statt `DECIMAL(15,2)` - vor Verlass auf die Präzision prüfen.']
+  category_id integer [not null, note: '`ON DELETE RESTRICT` - eine Kategorie mit aktivem Budget kann nicht gelöscht werden.']
+  user_id integer [not null]
+  currency varchar(3) [not null, default: 'eur', note: 'DB erlaubt aktuell nur 3 Zeichen (frühere Inkonsistenz mit `varchar(128)` in einer älteren Migrationsfassung wurde behoben).']
+
+  indexes {
+    (category_id) [name: 'idx_budget_category_id']
+    (user_id) [name: 'idx_budget_user_id']
+  }
+
+  Note: '''
+    Pro Benutzer + Kategorie + Zeitraum ein Ausgabenlimit. `BudgetController::list()`
+    ergänzt zur Laufzeit zusätzlich einen virtuellen, nicht persistierten "Unbudgetiert"-
+    Eintrag für Transaktionen ohne zugeordnetes Budget - das ist kein Datenbankobjekt.
+  '''
+}
+
+Table subscription {
+  id integer [pk, increment]
+  created datetime [not null, default: `CURRENT_TIMESTAMP`]
+  modified datetime [not null, default: `CURRENT_TIMESTAMP`]
+  flags integer [not null, default: 0, note: 'Undokumentierte Bitmask-Reserve, im Code nicht ausgewertet.']
+  name varchar(128) [not null]
+  account_id integer [not null, note: 'Wird beim Anlegen NICHT gegen den Besitz des aufrufenden Benutzers geprüft, siehe Security Review.']
+  balance_value decimal(15,2) [not null, note: 'Betrag je Ausführung des Abos.']
+  interval varchar(128) [null, note: 'Freitext statt Enum. App-seitig per Regex `/^(\\d+)([MYD])$/` geparst (`Subscription::getInterval()`) - jeder andere Wert wird beim Forecast stillschweigend zu `null`.']
+  start date [null, note: 'Ohne `start` (und ohne gültiges `interval`) ist die Subscription nicht forecastfähig (`Subscription::isEligibleForForecast()`).']
+  end date [null, note: 'Optionales Enddatum; der Forecast läuft nicht über dieses Datum hinaus.']
+  term varchar(128) [null, note: '⚠ Existiert in der Live-Datenbank/im Schema-Snapshot, wird aber in KEINER Migrationsdatei angelegt (bekannte Schema-Drift, siehe CLAUDE.md). Vertragslaufzeit, im Code nicht ausgewertet.']
+  noticeperiod varchar(128) [null, note: '⚠ Gleiche Schema-Drift wie `term` - kein Migrations-Unterbau. Kündigungsfrist, im Code nicht ausgewertet.']
+  comments varchar(512) [null, note: '⚠ Gleiche Schema-Drift wie `term`/`noticeperiod`. Freitext-Notiz, im Code nicht ausgewertet. Ein Schema-Snapshot zeigte hierfür `varchar(128)` statt der vom Validator erwarteten 512 Zeichen - Längenbegrenzung vor Produktivbetrieb verifizieren.']
+  user_id integer [not null, note: '`default => 1` wurde hier bewusst entfernt (Migration `20260813170000_RemoveSubscriptionOwnerDefaults`) - ein Insert ohne `user_id` schlägt jetzt fehl statt still Benutzer #1 zugeordnet zu werden.']
+  category_id integer [not null, note: 'Gleiche Historie wie `user_id` - Default `=> 1` bewusst entfernt.']
+
+  indexes {
+    (account_id) [name: 'idx_subscription_account_id']
+    (user_id) [name: 'idx_subscription_user_id']
+    (category_id) [name: 'idx_subscription_category_id']
+  }
+
+  Note: '''
+    Wiederkehrende, geplante Buchung (Abo/Miete/etc.). Erzeugt keine echten `transactions`-
+    Zeilen im Voraus, sondern wird zur Laufzeit "vorwärts" simuliert
+    (`Subscription::forecast()` erzeugt geklonte, nicht persistierte Entities mit
+    berechnetem `execution`-Datum für die nächsten 12 Monate).
+    Die Entity-Docblock-Annotation `@property string|null $subscription_group_id` referenziert
+    keine existierende Spalte/Tabelle - toter Leftover-Kommentar, absichtlich nicht in dieses
+    Diagramm übernommen.
+  '''
+}
+
+// ---------------------------------------------------------------------------
+// Sparziele
+// ---------------------------------------------------------------------------
+
+Table piggybank {
+  id integer [pk, increment]
+  created datetime [not null, default: `CURRENT_TIMESTAMP`]
+  modified datetime [not null, default: `CURRENT_TIMESTAMP`]
+  flags integer [not null, default: 0, note: 'Undokumentierte Bitmask-Reserve, im Code nicht ausgewertet.']
+  account_id integer [not null, note: 'Konzeptionell eine Referenz auf `account.id` (Entity-Docblock, `OwnedTable`/Validator), aber OHNE DB-seitige FK/Index - siehe Tabellennotiz.']
+  name varchar(128) [not null]
+  balance_value decimal(15,2) [not null, note: '''
+    Aktueller Sparstand. Wird aus der Summe aller `transactions_to_piggybanks.balance_value`
+    dieses Piggybanks neu berechnet (`Piggybank::summarize()`). Ein lokaler Schema-Snapshot
+    zeigte diese Spalte als `FLOAT` statt `DECIMAL` - Typ vor Produktivbetrieb verifizieren.
+  ''']
+  balance_currency varchar(100) [not null]
+  start date [null]
+  end date [null]
+  target decimal(15,2) [not null, note: 'Sparziel-Betrag. Schema-Snapshot zeigte `FLOAT` statt `DECIMAL`.']
+  description varchar(512) [null]
+  user_id integer [not null, default: 1, note: 'Konzeptionell eine Referenz auf `users.id` (`OwnedTable`/`UserOwnedBehavior` erzwingt sie serverseitig), aber OHNE DB-seitige FK/Index - siehe Tabellennotiz.']
+
+  Note: '''
+    ⚠ **Komplett ohne eigene Migration.** Diese Tabelle existiert nur, weil sie irgendwann
+    manuell/ad-hoc in der Datenbank angelegt wurde - `PiggybankTable`/`Piggybank`-Entity/
+    `PiggybankController` sind im Anwendungscode vorhanden und aktiv vom Frontend genutzt
+    (Mobile-Pages `pages/saving/*`), aber es gibt keine reproduzierbare/deploybare
+    Schema-Definition dafür. Eine frisch aus den Migrationen aufgesetzte Datenbank hätte
+    diese Tabelle NICHT. Entsprechend fehlen auch die sonst überall vorhandenen FK-
+    Constraints auf `account_id`/`user_id` und jegliche Sekundärindizes - laut Schema-Snapshot
+    existiert hier außer dem Primary Key keine einzige Constraint. Sparziele eines Benutzers
+    können dadurch technisch auf ein fremdes Konto verweisen, ohne dass die Datenbank das
+    verhindert (nur die Anwendungslogik über `OwnedTable`).
+
+    Spar-"Einzahlungen" laufen über zwei künstlich erzeugte, gegenläufige `transactions`-
+    Zeilen (`Piggybank::save()`) - diese Methode enthält aktuell noch hartkodierte
+    Platzhalterwerte (`account_id => 20`, `user_id => 1`), erkennbarer WIP-Leftover.
+  '''
+}
+
+Table transactions_to_piggybanks {
+  id integer [pk, increment]
+  created datetime [not null, default: `CURRENT_TIMESTAMP`]
+  modified datetime [not null, default: `CURRENT_TIMESTAMP`]
+  flags integer [not null, default: 0, note: 'Undokumentierte Bitmask-Reserve, im Code nicht ausgewertet.']
+  balance_value decimal(15,2) [not null, note: 'Anteil des Piggybanks an der verknüpften Buchung/dem verknüpften Konto.']
+  account_id integer [not null, note: '''
+    Existiert als Spalte + FK in Migration UND Live-Snapshot, wird aber vom aktuellen
+    Anwendungscode (`TransactionsToPiggybanksTable`, `PiggybankController::save()`) nicht
+    mehr gelesen oder geschrieben - vermutlich Rest eines älteren Datenmodells, das
+    Piggybanks direkt mit Konten statt mit einzelnen Transaktionen verknüpft hat.
+  ''']
+  piggybank_id integer [not null]
+
+  indexes {
+    (account_id) [name: 'idx_transactions_account_id']
+    (piggybank_id) [name: 'idx_transactions_piggybank_id']
+  }
+
+  Note: '''
+    ⚠ **Strukturkonflikt zwischen Code und Datenbank:** `TransactionsToPiggybanksTable`
+    definiert eine Assoziation `belongsTo('Transactions', foreignKey: 'transaction_id')`,
+    die `TransactionsToPiggybank`-Entity deklariert `$transaction_id` als Property, und
+    `PiggybankController::fetch()/save()` filtern/setzen aktiv nach `transaction_id` -
+    diese Spalte existiert aber WEDER in der zugehörigen Migration
+    (`20260824195452_PiggybankConnections.php`) NOCH im lokalen Schema-Snapshot. Jeder
+    Versuch, darüber zu lesen/schreiben, dürfte zur Laufzeit mit einem "Unknown column"-Fehler
+    der Datenbank scheitern. Vermutlich ein unvollständiger Refactor (von
+    "Piggybank ↔ Konto" zu "Piggybank ↔ einzelne Transaction"), bei dem die Migration nicht
+    nachgezogen wurde. Diese Spalte wurde bewusst NICHT in dieses Diagramm aufgenommen, da
+    sie in der tatsächlichen Datenbank nicht existiert - sie müsste per neuer Migration
+    ergänzt werden (`transaction_id` FK auf `transactions.id`), damit der bestehende Code
+    funktioniert.
+
+    Pivot-/Verknüpfungstabelle zwischen (eigentlich) Transaktionen und Piggybanks - erlaubt,
+    eine einzelne Buchung anteilig auf mehrere Sparziele aufzuteilen.
+  '''
+}
+
+// ---------------------------------------------------------------------------
+// Beziehungen
+// ---------------------------------------------------------------------------
+
+Ref: users.role_id > role.id [delete: restrict, update: no action]
+
+Ref: account.accounttype_id > accounttype.id [delete: restrict, update: no action]
+Ref: account.user_id > users.id [delete: restrict, update: no action]
+
+Ref: categories.parent_id > categories.id [delete: set null, update: no action]
+
+Ref: budget.category_id > categories.id [delete: restrict, update: no action]
+Ref: budget.user_id > users.id [delete: restrict, update: no action]
+
+Ref: subscription.account_id > account.id [delete: restrict, update: no action]
+Ref: subscription.user_id > users.id [delete: restrict, update: no action]
+Ref: subscription.category_id > categories.id [delete: restrict, update: no action]
+
+Ref: transactions.account_id > account.id [delete: restrict, update: no action]
+Ref: transactions.category_id > categories.id [delete: set null, update: no action]
+Ref: transactions.transfer_id > transactions.id [delete: set null, update: no action]
+Ref: transactions.subscription_id > subscription.id [delete: restrict, update: no action]
+Ref: transactions.user_id > users.id [delete: restrict, update: no action]
+
+Ref: transactions_to_piggybanks.account_id > account.id [delete: restrict, update: no action]
+Ref: transactions_to_piggybanks.piggybank_id > piggybank.id [delete: restrict, update: no action]
+
+// piggybank.account_id -> account.id und piggybank.user_id -> users.id sind KEINE echten
+// DB-Refs (keine FK-Constraint vorhanden, siehe Tabellennotiz bei `piggybank`) und werden
+// deshalb hier bewusst NICHT als `Ref:` deklariert, um kein nicht existierendes
+// DB-Constraint vorzutäuschen. Die Beziehung ist rein anwendungsseitig (Entity-Docblock,
+// `OwnedTable`).
+
+// ---------------------------------------------------------------------------
+// Gruppierung für die dbdocs-Navigation
+// ---------------------------------------------------------------------------
+
+TableGroup "Stammdaten (global, nicht mandantengetrennt)" {
+  role
+  accounttype
+  categories
+}
+
+TableGroup "Benutzerverwaltung" {
+  users
+}
+
+TableGroup "Kernbuchhaltung" {
+  account
+  transactions
+}
+
+TableGroup "Planung" {
+  budget
+  subscription
+}
+
+TableGroup "Sparziele" {
+  piggybank
+  transactions_to_piggybanks
+}

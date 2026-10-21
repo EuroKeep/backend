@@ -1,0 +1,2610 @@
+openapi: 3.0.3
+info:
+  title: Eurokeep API
+  description: |
+    JSON API for Eurokeep, a personal household budgeting application.
+
+    The API is RPC-style: every controller action is reachable as `/{controller}/{action}/{id?}`
+    (CakePHP fallback routes, `DashedRoute`). Multi-word actions are dashed
+    (`/subscription/upload-logo/{id}`); camelCase paths such as `/account/toggleFavourite/{id}`
+    are accepted as well.
+
+    ## Response envelope
+    Every JSON response (success or error) is rendered through `AppController::beforeRender()` and
+    therefore always contains these keys in addition to the endpoint-specific payload:
+
+    | key | meaning |
+    |---|---|
+    | `success` | `true` unless the action failed |
+    | `errors` | legacy field, practically always `[]` |
+    | `csrfToken` | the current CSRF token, to be sent back as `X-CSRF-Token` (see below) |
+
+    CRUD endpoints (`add`, `view`, `edit`, `delete`) put the entity under `item`;
+    list endpoints (`index`, `list`) put the entities under `items`. A few special-purpose
+    endpoints use their own keys (`categoryTree`, `forecast`, `statistics`, `summary`,
+    `transaction`, `transactions`, `user`) — these are documented individually below.
+
+    ## Errors
+    Failures raised by the controllers (`fail()`/`failMany()`) are returned as
+    `{ success: false, item: null, error: string[] | ValidationError, errors: [], csrfToken }`
+    with the matching HTTP status. Uncaught exceptions (e.g. `RecordNotFoundException` on endpoints
+    that do not handle it themselves) are rendered by CakePHP's error handler instead and do **not**
+    follow this envelope.
+
+    Not-found handling is not uniform: `view` and `delete` answer an unknown (or foreign) id with
+    **400** `"<Resource> not found"`, `edit` answers with **404**. `delete` answers **409** if the
+    record is still referenced by other records (DB foreign key `RESTRICT`).
+
+    ## Authentication
+    Three authenticators are active, in this order:
+    1. **API key** — `Authorization: Bearer <api_key>`. The key is matched against the user's
+       `users.api_key` column.
+    2. **Session cookie** — set by `POST /auth/login` (this is what the Angular SPA uses).
+    3. **Form login** — only on `POST /auth/login` (`username` = e-mail, `password`).
+
+    A request to a protected endpoint without a valid identity is answered with status **401 and an
+    empty body**.
+
+    ### Demo server
+    The official demo server (`https://demo.eurokeep.io`) accepts this default API key:
+
+    ```
+    Authorization: Bearer 74c013b7d5c08fad28de599476d6defa86a188c22d3068cba6f2e95ae492e285a766e0e6b8a8a5ea98944fa5f4bcec2cc8be19ad1ee78e1df0c7465c9ca451f820f162b16e38a45f004dc47241a3fa33519e5906594e0463568a6d3e1a4863f1c19427b5fabd221c41e313c661daafc05899354460c0e438b7be0dc530b5fcdf
+    ```
+
+    Data isolation is enforced server-side: accounts, budgets, piggybanks, subscriptions and
+    transactions are always filtered by the authenticated user, so foreign records behave exactly like
+    non-existent ones. **Account types and categories are global** (shared by all users).
+
+    ## CSRF
+    `CsrfProtectionMiddleware` is active for session-based clients (cookie login). Every
+    `POST`/`PUT`/`PATCH`/`DELETE` request must send the `csrfToken` cookie **and** the same value in
+    the `X-CSRF-Token` header. Obtain both with any prior `GET` request (e.g. `GET /auth/init`): the
+    cookie is set by the response, and the token is also part of every JSON response body.
+    Requests authenticated via API key (`Authorization: Bearer <api_key>`) are **exempt** from the
+    CSRF check and need neither the cookie nor the `X-CSRF-Token` header.
+
+    ## Known caveats (accurate as of this revision, not aspirational)
+    - `GET /stats/index` is not a JSON endpoint — it returns Prometheus-format plaintext metrics.
+    - The `apikey` query parameter configured in `Application.php` is not evaluated by
+      `ApikeyAuthenticator` — only the `Authorization` header works.
+  version: "1.1.0"
+  contact:
+    name: Eurokeep
+    url: https://eurokeep.nox.kiwi
+
+servers:
+  - url: https://demo.eurokeep.io
+    description: Official Demo Server
+
+tags:
+  - name: Auth
+    description: Login, logout, registration and client bootstrap.
+  - name: Accounts
+    description: Bank/cash accounts owned by the authenticated user.
+  - name: Account Types
+    description: Global lookup values used to categorize accounts (e.g. checking, savings).
+  - name: Budgets
+    description: Monthly spending limits tied to a category.
+  - name: Categories
+    description: Global, hierarchical (nested-set) categories used to classify transactions, budgets and subscriptions.
+  - name: Subscriptions
+    description: Recurring charges/income tied to an account and category.
+  - name: Piggybanks
+    description: Savings goals tied to an account, funded by splitting transactions onto them.
+  - name: Transactions
+    description: Individual bookings against an account.
+  - name: Payment Methods
+    description: Global lookup values for subscriptions (e.g. direct debit, credit card).
+  - name: Summary
+    description: Aggregated views across accounts/transactions for dashboards and reports.
+  - name: Search
+    description: Full-text-ish search across all user-owned entities.
+  - name: Monitoring
+    description: Non-JSON, machine-readable endpoints for external tooling (e.g. Prometheus).
+
+security:
+  - ApiKey: []
+
+paths:
+  # ---------------------------------------------------------------- Auth
+  /auth/init:
+    get:
+      tags: [Auth]
+      summary: Client bootstrap (registration flag + CSRF token)
+      description: Unauthenticated. Also the simplest way to obtain the `csrfToken` cookie/value.
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      enable_registration: {type: boolean, description: Value of the `ENABLE_REGISTRATION` environment variable.}
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in with e-mail and password (starts a session)
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+      responses:
+        '200':
+          description: OK — the session cookie is set.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      user: {$ref: '#/components/schemas/User'}
+        '400':
+          description: '`User authentication failed`'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: End the current session
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/EnvelopeBase'}
+
+  /auth/register:
+    put:
+      tags: [Auth]
+      summary: Register a new user
+      description: |
+        Only available if `ENABLE_REGISTRATION` is enabled, otherwise 400. The `username` is used as
+        both e-mail and display name. Validation errors are **not** reported — the (possibly unsaved)
+        user entity is returned either way.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      user: {$ref: '#/components/schemas/User'}
+        '400':
+          description: '`Registration disabled. Check your .env file.`'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+
+  # ---------------------------------------------------------------- Accounts
+  /account/index:
+    get:
+      tags: [Accounts]
+      summary: List the current user's active accounts
+      description: Only accounts with the "active" flag bit (1) set are returned, favourites (bit 2) first, then by name. Paginated, max. 100 per page.
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParam'
+        - $ref: '#/components/parameters/LimitQueryParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountIndexResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /account/add:
+    post:
+      tags: [Accounts]
+      summary: Create an account
+      description: '`user_id`, `balance_value` (always starts at 0) and `flags` (always 1 = active) are set by the server; client values are ignored.'
+      parameters:
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /account/view/{id}:
+    get:
+      tags: [Accounts]
+      summary: Get a single account
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /account/edit/{id}:
+    put:
+      tags: [Accounts]
+      summary: Update an account
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update). `balance_value` is read-only and ignored.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Accounts]
+      summary: Update an account
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update). `balance_value` is read-only and ignored.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /account/delete/{id}:
+    delete:
+      tags: [Accounts]
+      summary: Delete an account
+      description: Also deletes all transactions of the account.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      responses:
+        '200':
+          $ref: '#/components/responses/Deleted'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /account/toggleFavourite/{id}:
+    post:
+      tags: [Accounts]
+      summary: Toggle the "favourite" flag (bit 2) on an account
+      description: An unknown id is not handled by the controller and ends up in CakePHP's generic 404 error page.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer}
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  # ---------------------------------------------------------------- Account Types
+  /accounttype/index:
+    get:
+      tags: [Account Types]
+      summary: List account types
+      description: The list is returned twice, under `items` and (legacy) `accounttypes`.
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParam'
+        - $ref: '#/components/parameters/LimitQueryParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/AccounttypeIndexResponse'
+                  - type: object
+                    properties:
+                      accounttypes:
+                        type: array
+                        items: {$ref: '#/components/schemas/Accounttype'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /accounttype/add:
+    post:
+      tags: [Account Types]
+      summary: Create an account type
+      parameters:
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccounttypeInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccounttypeItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /accounttype/view/{id}:
+    get:
+      tags: [Account Types]
+      summary: Get a single account type
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccounttypeItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /accounttype/edit/{id}:
+    put:
+      tags: [Account Types]
+      summary: Update an account type
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccounttypeInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccounttypeItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Account Types]
+      summary: Update an account type
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccounttypeInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccounttypeItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /accounttype/delete/{id}:
+    delete:
+      tags: [Account Types]
+      summary: Delete an account type
+      description: Fails with 409 while accounts still use this type.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      responses:
+        '200':
+          $ref: '#/components/responses/Deleted'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ---------------------------------------------------------------- Budgets
+  /budget/index:
+    get:
+      tags: [Budgets]
+      summary: List budgets (with category, without spend)
+      parameters:
+        - $ref: '#/components/parameters/FilterQueryParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetIndexResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /budget/list:
+    get:
+      tags: [Budgets]
+      summary: List budgets enriched with spend for a date range
+      description: |
+        Each budget is annotated with `spent` (sum of the matching transactions, negative for
+        expenses) and its `category.transactions` for the range given by `start`/`end`
+        (both normalized to the first day of their month; default = current month).
+      parameters:
+        - $ref: '#/components/parameters/StartQueryParam'
+        - $ref: '#/components/parameters/EndQueryParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetIndexResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /budget/total:
+    get:
+      tags: [Budgets]
+      summary: Aggregate spend/free totals across all budgets for a date range
+      description: If the sum of all budget limits is 0 (e.g. no budgets), `spentPercent` and `freePercent` are both 0.
+      parameters:
+        - $ref: '#/components/parameters/StartQueryParam'
+        - $ref: '#/components/parameters/EndQueryParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      item: {$ref: '#/components/schemas/BudgetTotal'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /budget/add:
+    post:
+      tags: [Budgets]
+      summary: Create a budget
+      description: '`user_id` is set by the server and ignored if sent by the client.'
+      parameters:
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /budget/view/{id}:
+    get:
+      tags: [Budgets]
+      summary: Get a single budget
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /budget/edit/{id}:
+    put:
+      tags: [Budgets]
+      summary: Update a budget
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Budgets]
+      summary: Update a budget
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /budget/delete/{id}:
+    delete:
+      tags: [Budgets]
+      summary: Delete a budget
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      responses:
+        '200':
+          $ref: '#/components/responses/Deleted'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ---------------------------------------------------------------- Categories
+  /categories/index:
+    get:
+      tags: [Categories]
+      summary: List categories (flat, ordered by name)
+      description: Paginated, max. 1000 per page. Rebuilds the nested-set tree (`recover()`) on every call.
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParam'
+        - $ref: '#/components/parameters/LimitQueryParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryIndexResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /categories/tree:
+    get:
+      tags: [Categories]
+      summary: List categories as a nested tree
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      categoryTree:
+                        type: array
+                        items: {$ref: '#/components/schemas/Category'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /categories/add:
+    post:
+      tags: [Categories]
+      summary: Create a category
+      parameters:
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /categories/view/{id}:
+    get:
+      tags: [Categories]
+      summary: Get a single category
+      description: Contains the related `budget`, `transactions` and `subscription` associations.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /categories/edit/{id}:
+    put:
+      tags: [Categories]
+      summary: Update a category
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Categories]
+      summary: Update a category
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /categories/move/{id}:
+    patch:
+      tags: [Categories]
+      summary: Move a category within the tree
+      description: |
+        Re-parents the category (`parent_id`, `null` = top level) and puts it at the zero-based
+        `position` among its new siblings (clamped to the last position). Descendants move along.
+        Accepts `PATCH` or `PUT`. Moving a category below itself or one of its descendants fails with 400.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [parent_id, position]
+              properties:
+                parent_id: {type: integer, nullable: true}
+                position: {type: integer, minimum: 0}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /categories/delete/{id}:
+    delete:
+      tags: [Categories]
+      summary: Delete a category
+      description: Also deletes all descendant categories (TreeBehavior). Fails with 409 while budgets, subscriptions or transactions still reference one of them.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      responses:
+        '200':
+          $ref: '#/components/responses/Deleted'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ---------------------------------------------------------------- Subscriptions
+  /subscription/index:
+    get:
+      tags: [Subscriptions]
+      summary: List subscriptions (with category and payment method, ordered by name)
+      description: Paginated, max. 100 per page.
+      parameters:
+        - $ref: '#/components/parameters/FilterQueryParam'
+        - $ref: '#/components/parameters/PageQueryParam'
+        - $ref: '#/components/parameters/LimitQueryParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionIndexResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /subscription/add:
+    post:
+      tags: [Subscriptions]
+      summary: Create a subscription
+      description: '`user_id` is set by the server and ignored if sent by the client. Use `/subscription/upload-logo/{id}` to set an own logo.'
+      parameters:
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /subscription/view/{id}:
+    get:
+      tags: [Subscriptions]
+      summary: Get a single subscription
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /subscription/edit/{id}:
+    put:
+      tags: [Subscriptions]
+      summary: Update a subscription
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Subscriptions]
+      summary: Update a subscription
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /subscription/delete/{id}:
+    delete:
+      tags: [Subscriptions]
+      summary: Delete a subscription
+      description: An uploaded logo file is deleted as well.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      responses:
+        '200':
+          $ref: '#/components/responses/Deleted'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /subscription/upload-logo/{id}:
+    post:
+      tags: [Subscriptions]
+      summary: Upload (or replace) the logo of a subscription
+      description: |
+        The file type is detected from the content, never from the client-supplied name/type.
+        Accepted: PNG, JPEG, GIF, WebP, SVG (without own entity declarations); max. 2 MB.
+        On success `logo` is set to `upload/<file>`; the previous upload is deleted.
+        An unknown id is answered with 404.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [logo]
+              properties:
+                logo:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionItemResponse'
+        '400':
+          description: No file, file too large or not an accepted image.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          description: File could not be stored or subscription could not be saved.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+
+  /subscription/delete-logo/{id}:
+    delete:
+      tags: [Subscriptions]
+      summary: Remove the logo of a subscription
+      description: |
+        Sets `logo` to `null` and deletes an uploaded file (static frontend assets are only unlinked).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          description: The subscription could not be saved.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+
+  /subscription/logo/{id}:
+    get:
+      tags: [Subscriptions]
+      summary: Download the uploaded logo of a subscription
+      description: 404 if the subscription does not exist, has no logo, or its logo is a static frontend asset (no `upload/` prefix — those are served from `/a/assets/images/logos/<file>`).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+      responses:
+        '200':
+          description: The image file.
+          content:
+            image/png: {schema: {type: string, format: binary}}
+            image/jpeg: {schema: {type: string, format: binary}}
+            image/gif: {schema: {type: string, format: binary}}
+            image/webp: {schema: {type: string, format: binary}}
+            image/svg+xml: {schema: {type: string, format: binary}}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: No uploaded logo (CakePHP error page, not the JSON envelope).
+
+  /subscription/forecast/{id}:
+    get:
+      tags: [Subscriptions]
+      summary: Forecast upcoming executions until the end of next month
+      description: |
+        Returns one entry per future execution between now and the last day of next month, sorted by
+        execution date. Only subscriptions with `interval` (`<n>D|M|Y`) and `start` are forecast.
+        Omit `id` (or pass `0`) to forecast all subscriptions; a non-numeric id is rejected.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Subscription ID, or `0` for all subscriptions. The path segment may also be omitted entirely (`/subscription/forecast`).
+          schema: {type: integer}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      forecast:
+                        type: array
+                        items: {$ref: '#/components/schemas/SubscriptionForecast'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /subscription/statistics:
+    get:
+      tags: [Subscriptions]
+      summary: Cost statistics across all active subscriptions
+      description: |
+        Active = no `end` date or `end` not yet passed. Costs are extrapolated from `balance_value`
+        and `interval` (`D` = 365, `W` = 52, `M` = 12, `Y` = 1 per year). Subscriptions whose interval
+        cannot be parsed are counted in `count`/`count_without_interval` but excluded from all cost
+        figures. Values keep their sign (expenses are negative). A trailing path segment
+        (`/subscription/statistics/{anything}`, as sent by the frontend) is ignored.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      statistics: {$ref: '#/components/schemas/SubscriptionStatistics'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  # ---------------------------------------------------------------- Piggybanks
+  /piggybank/index:
+    get:
+      tags: [Piggybanks]
+      summary: List piggybanks
+      parameters:
+        - $ref: '#/components/parameters/FilterQueryParam'
+        - $ref: '#/components/parameters/PageQueryParam'
+        - $ref: '#/components/parameters/LimitQueryParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PiggybankIndexResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /piggybank/add:
+    post:
+      tags: [Piggybanks]
+      summary: Create a piggybank
+      description: '`user_id` is set by the server and ignored if sent by the client.'
+      parameters:
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PiggybankInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PiggybankItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /piggybank/view/{id}:
+    get:
+      tags: [Piggybanks]
+      summary: Get a single piggybank
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PiggybankItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /piggybank/edit/{id}:
+    put:
+      tags: [Piggybanks]
+      summary: Update a piggybank
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update). To put money into piggybanks, use `POST /piggybank/save/{transactionId}`.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PiggybankInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PiggybankItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Piggybanks]
+      summary: Update a piggybank
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update). To put money into piggybanks, use `POST /piggybank/save/{transactionId}`.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PiggybankInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PiggybankItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /piggybank/delete/{id}:
+    delete:
+      tags: [Piggybanks]
+      summary: Delete a piggybank
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      responses:
+        '200':
+          $ref: '#/components/responses/Deleted'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /piggybank/fetch/{transactionId}:
+    get:
+      tags: [Piggybanks]
+      summary: Get how a transaction is split onto piggybanks
+      parameters:
+        - $ref: '#/components/parameters/TransactionIdPathParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      item: {$ref: '#/components/schemas/PiggybankSplit'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: '`Transaction not found`'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+
+  /piggybank/save/{transactionId}:
+    post:
+      tags: [Piggybanks]
+      summary: Split a transaction onto piggybanks
+      description: |
+        Creates or updates one `transactions_to_piggybanks` entry per piggybank in `parts`; afterwards
+        the `balance_value` of each affected piggybank is recalculated from all its entries. Piggybanks
+        not listed in `parts` are left untouched. An unknown/foreign piggybank id ends up in CakePHP's
+        generic 404 error page (entries before it are already saved).
+      parameters:
+        - $ref: '#/components/parameters/TransactionIdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [parts]
+              properties:
+                parts:
+                  type: object
+                  description: Map of piggybank id → amount assigned to it.
+                  additionalProperties: {type: number, format: double}
+                  example: {"3": 50.0, "7": 25.5}
+      responses:
+        '200':
+          description: OK (no payload besides the envelope)
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/EnvelopeBase'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: '`Transaction not found`'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+
+  # ---------------------------------------------------------------- Transactions
+  /transactions/index:
+    get:
+      tags: [Transactions]
+      summary: List transactions in a date range
+      description: |
+        Returns the transactions (with category) with `start <= created < end`, newest first,
+        paginated (max. 1000 per page). `start`/`end` are normalized to the first day of their month
+        (default = current month). `total`, `revenues` and `expenses` are computed over the
+        returned page only.
+      parameters:
+        - $ref: '#/components/parameters/StartQueryParam'
+        - $ref: '#/components/parameters/EndQueryParam'
+        - name: comment
+          in: query
+          required: false
+          description: Only transactions whose comment contains this text.
+          schema: {type: string}
+        - $ref: '#/components/parameters/PageQueryParam'
+        - $ref: '#/components/parameters/LimitQueryParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items: {$ref: '#/components/schemas/Transaction'}
+                      total: {type: number, format: double}
+                      revenues: {type: number, format: double, description: Sum of all positive amounts.}
+                      expenses: {type: number, format: double, description: Sum of all non-positive amounts.}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /transactions/add:
+    post:
+      tags: [Transactions]
+      summary: Create a transaction
+      description: |
+        `flags` is forced to 1 and `user_id` is set by the server. The balance of the account is
+        recalculated afterwards. `transfer_id` is stored as-is — no mirrored counter-booking is
+        created automatically anymore.
+      parameters:
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /transactions/view/{id}:
+    get:
+      tags: [Transactions]
+      summary: Get a single transaction
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /transactions/edit/{id}:
+    put:
+      tags: [Transactions]
+      summary: Update a transaction
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update). The balance of the account is recalculated afterwards.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Transactions]
+      summary: Update a transaction
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update). The balance of the account is recalculated afterwards.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /transactions/delete/{id}:
+    delete:
+      tags: [Transactions]
+      summary: Delete a transaction
+      description: The balance of the account is recalculated afterwards.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      responses:
+        '200':
+          $ref: '#/components/responses/Deleted'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /transactions/stream/{accountId}:
+    get:
+      tags: [Transactions]
+      summary: Transactions of one account within a date range
+      description: |
+        Returns up to 250 transactions (with category) of the account with `start <= created < end`,
+        newest first. Unlike most other endpoints, `start`/`end` are used as exact timestamps (not
+        normalized to month boundaries) and both default to *now* — so always pass them.
+        An unknown account id ends up in CakePHP's generic 404 error page.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: {type: integer}
+        - name: start
+          in: query
+          required: false
+          schema: {type: string, format: date-time}
+        - name: end
+          in: query
+          required: false
+          schema: {type: string, format: date-time}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      account: {$ref: '#/components/schemas/Account'}
+                      transactions:
+                        type: array
+                        items: {$ref: '#/components/schemas/Transaction'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /transactions/mapping:
+    post:
+      tags: [Transactions]
+      summary: Find the most recent transaction with a similar comment
+      description: |
+        Used by the "add transaction" form to auto-suggest a category based on comment history
+        (`comment LIKE %<comment>%`, newest first, with category). An empty (or whitespace-only)
+        `comment` is answered with 400; no match produces CakePHP's generic 404 error page.
+      parameters:
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [comment]
+              properties:
+                comment: {type: string}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      transaction: {$ref: '#/components/schemas/Transaction'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '400':
+          description: '`Comment cannot be empty`'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+        '404':
+          description: No matching transaction found.
+
+  # ---------------------------------------------------------------- Payment Methods
+  /payment-method/index:
+    get:
+      tags: [Payment Methods]
+      summary: List payment methods
+      description: Only active payment methods (`flags = 1`), unless `all=1` is given. Ordered by name. Also reachable as `/paymentMethod/...` (all payment method routes).
+      parameters:
+        - name: all
+          in: query
+          required: false
+          description: '`1` also lists inactive payment methods.'
+          schema: {type: string, enum: ['1']}
+        - $ref: '#/components/parameters/PageQueryParam'
+        - $ref: '#/components/parameters/LimitQueryParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items: {$ref: '#/components/schemas/PaymentMethod'}
+
+  /payment-method/add:
+    post:
+      tags: [Payment Methods]
+      summary: Create a payment method
+      description: '`flags` defaults to 1 (active) when omitted.'
+      parameters:
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentMethodInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentMethodItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /payment-method/view/{id}:
+    get:
+      tags: [Payment Methods]
+      summary: Get a single account type
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentMethodItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /payment-method/edit/{id}:
+    put:
+      tags: [Payment Methods]
+      summary: Update a payment method
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentMethodInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentMethodItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Payment Methods]
+      summary: Update a payment method
+      description: Accepts `PUT` or `PATCH` interchangeably (partial update).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentMethodInput'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentMethodItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /payment-method/delete/{id}:
+    delete:
+      tags: [Payment Methods]
+      summary: Delete a payment method
+      description: Fails with 409 while subscriptions or transactions still use this payment method.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      responses:
+        '200':
+          $ref: '#/components/responses/Deleted'
+        '400':
+          $ref: '#/components/responses/BadRequestOrNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /payment-method/upload-logo/{id}:
+    post:
+      tags: [Payment Methods]
+      summary: Upload (or replace) the image of a payment method
+      description: |
+        The file type is detected from the content, never from the client-supplied name/type.
+        Accepted: PNG, JPEG, GIF, WebP, SVG (without own entity declarations); max. 2 MB.
+        On success `image` is set to `upload/<file>`; the previous upload is deleted.
+        An unknown id is answered with 404.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [logo]
+              properties:
+                logo:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentMethodItemResponse'
+        '400':
+          description: No file, file too large or not an accepted image.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          description: File could not be stored or payment method could not be saved.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+
+  /payment-method/delete-logo/{id}:
+    delete:
+      tags: [Payment Methods]
+      summary: Remove the image of a payment method
+      description: |
+        Sets `image` to `null` and deletes an uploaded file (static frontend assets are only unlinked).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+        - $ref: '#/components/parameters/CsrfTokenHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentMethodItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          description: The payment method could not be saved.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+
+  /payment-method/logo/{id}:
+    get:
+      tags: [Payment Methods]
+      summary: Download the uploaded image of a payment method
+      description: 404 if the payment method does not exist, or has no uploaded logo (value without `upload/` prefix).
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+      responses:
+        '200':
+          description: The image file.
+          content:
+            image/png: {schema: {type: string, format: binary}}
+            image/jpeg: {schema: {type: string, format: binary}}
+            image/gif: {schema: {type: string, format: binary}}
+            image/webp: {schema: {type: string, format: binary}}
+            image/svg+xml: {schema: {type: string, format: binary}}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: No uploaded logo (CakePHP error page, not the JSON envelope).
+
+  # ---------------------------------------------------------------- Summary
+  /summary/complete:
+    get:
+      tags: [Summary]
+      summary: Accounts with opening/closing balance plus all their transactions for a date range
+      description: |
+        The account list is taken from the user's stored `settings.SUMMARY_ACCOUNTS` preference (in
+        that order), not from all of their accounts. `start`/`end` are normalized to the first day of
+        their month. For each account, `balance_value_closing` is the balance before `start` and
+        `balance_value` the balance at `end`.
+      parameters:
+        - name: start
+          in: query
+          required: true
+          schema: {type: string, format: date}
+        - name: end
+          in: query
+          required: true
+          schema: {type: string, format: date}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      summary:
+                        type: object
+                        properties:
+                          Accounts:
+                            type: array
+                            items: {$ref: '#/components/schemas/Account'}
+                          Transactions:
+                            type: array
+                            items: {$ref: '#/components/schemas/Transaction'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /summary/closing:
+    get:
+      tags: [Summary]
+      summary: Monthly sum of bookings per account
+      description: |
+        For the user's `settings.SUMMARY_ACCOUNTS`, returns one row per month between `start` and
+        `end` (both normalized to the first day of their month, inclusive). Each row contains
+        `year`, `month` and one key per account id holding the sum of that account's bookings in the
+        month (0 if none).
+      parameters:
+        - name: start
+          in: query
+          required: true
+          schema: {type: string, format: date}
+        - name: end
+          in: query
+          required: true
+          schema: {type: string, format: date}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      summary:
+                        type: object
+                        properties:
+                          Accounts:
+                            type: array
+                            items: {$ref: '#/components/schemas/Account'}
+                          ClosingBalances:
+                            type: array
+                            items: {$ref: '#/components/schemas/ClosingBalanceRow'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /dashboard/networth:
+    get:
+      tags: [Summary]
+      summary: Net worth across all accounts
+      description: Plain sum of all account balances — currencies are **not** converted yet (always reported as `eur`).
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      item:
+                        type: object
+                        properties:
+                          balance_value: {type: number, format: double}
+                          balance_currency: {type: string, example: eur}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /analyzer/category:
+    get:
+      tags: [Summary]
+      summary: Spending of a category and its direct children for a date range
+      description: |
+        Returns one item for the category itself (only its own transactions) and one per direct
+        child category (including that child's subtree) with non-zero spending. Values are spending
+        only, as positive numbers. `start`/`end` are normalized to the first day of their month.
+      parameters:
+        - name: start
+          in: query
+          required: true
+          schema: {type: string, format: date}
+        - name: end
+          in: query
+          required: true
+          schema: {type: string, format: date}
+        - name: categoryId
+          in: query
+          required: false
+          description: Defaults to 64.
+          schema: {type: integer}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id: {type: integer, description: Category id.}
+                            name: {type: string, description: The category's emoji.}
+                            value: {type: number, format: double}
+                      transactions:
+                        type: array
+                        items: {$ref: '#/components/schemas/Transaction'}
+                      total: {type: number, format: double}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  # ---------------------------------------------------------------- Search
+  /search/everywhere:
+    get:
+      tags: [Search]
+      summary: Search accounts, transactions, budgets, piggybanks and subscriptions
+      description: Substring match (`LIKE %query%`) on `name` (accounts, budgets, piggybanks, subscriptions) and `comment` (transactions, newest first).
+      parameters:
+        - name: query
+          in: query
+          required: false
+          schema: {type: string}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      items:
+                        type: object
+                        properties:
+                          accounts:
+                            type: array
+                            items: {$ref: '#/components/schemas/Account'}
+                          transactions:
+                            type: array
+                            items: {$ref: '#/components/schemas/Transaction'}
+                          budgets:
+                            type: array
+                            items: {$ref: '#/components/schemas/Budget'}
+                          piggybanks:
+                            type: array
+                            items: {$ref: '#/components/schemas/Piggybank'}
+                          subscriptions:
+                            type: array
+                            items: {$ref: '#/components/schemas/Subscription'}
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  # ---------------------------------------------------------------- Monitoring
+  /stats/index:
+    get:
+      tags: [Monitoring]
+      summary: Prometheus-format metrics for accounts, budgets and piggybanks
+      description: |
+        Not a JSON endpoint. Emits Prometheus text-exposition-format metrics (`# HELP`/`# TYPE`
+        comments plus `metric_name value` lines) for the authenticated user: per-account and
+        per-currency total balances, per-piggybank target figures, and per-budget limit/spent/free/
+        per-day figures for the current month. Not called by the official frontend.
+      responses:
+        '200':
+          description: Prometheus metrics text.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP eurokeep_account_1_balance_unit_eur current balance of account "Checking"
+                  # TYPE eurokeep_account_1_balance_unit_eur gauge
+                  eurokeep_account_1_balance_unit_eur 1234.56
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+components:
+  securitySchemes:
+    ApiKey:
+      type: http
+      scheme: bearer
+      description: |
+        `Authorization: Bearer <api_key>` — matched against `users.api_key`.
+
+        Default key for the demo server (`https://demo.eurokeep.io`):
+        `74c013b7d5c08fad28de599476d6defa86a188c22d3068cba6f2e95ae492e285a766e0e6b8a8a5ea98944fa5f4bcec2cc8be19ad1ee78e1df0c7465c9ca451f820f162b16e38a45f004dc47241a3fa33519e5906594e0463568a6d3e1a4863f1c19427b5fabd221c41e313c661daafc05899354460c0e438b7be0dc530b5fcdf`
+
+  parameters:
+    IdPathParam:
+      name: id
+      in: path
+      required: true
+      description: Numeric identifier of the resource. Missing or non-numeric values are answered with 400.
+      schema: {type: integer}
+    TransactionIdPathParam:
+      name: transactionId
+      in: path
+      required: true
+      schema: {type: integer}
+    CsrfTokenHeader:
+      name: X-CSRF-Token
+      in: header
+      required: false
+      description: Must equal the `csrfToken` cookie (see "CSRF" in the API description). Required for session-based clients, not needed with API-key authentication.
+      schema: {type: string}
+    StartQueryParam:
+      name: start
+      in: query
+      required: false
+      description: Normalized to the first day of its month. Defaults to the current month.
+      schema: {type: string, format: date}
+    EndQueryParam:
+      name: end
+      in: query
+      required: false
+      description: Normalized to the first day of its month (exclusive upper bound). Defaults to next month.
+      schema: {type: string, format: date}
+    PageQueryParam:
+      name: page
+      in: query
+      required: false
+      schema: {type: integer, minimum: 1, default: 1}
+    LimitQueryParam:
+      name: limit
+      in: query
+      required: false
+      description: Page size; capped per endpoint (see endpoint description).
+      schema: {type: integer, minimum: 1}
+    FilterQueryParam:
+      name: filter
+      in: query
+      required: false
+      description: 'Map of field name to a `LIKE`-prefix value, e.g. `filter[name]=Grocer`.'
+      style: deepObject
+      explode: true
+      schema:
+        type: object
+        additionalProperties: {type: string}
+
+  responses:
+    BadRequest:
+      description: Missing/invalid identifier, malformed JSON body, or entity validation failure.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+    BadRequestOrNotFound:
+      description: Missing/invalid identifier, or no such resource for the authenticated user (`<Resource> not found`).
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+    NotFound:
+      description: No resource with the given id exists for the authenticated user.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+    Conflict:
+      description: The resource is still referenced by other records and cannot be deleted.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+    Unauthenticated:
+      description: No valid API key / session. Empty body.
+    Deleted:
+      description: Deleted. `item` is `null`.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/EnvelopeBase'
+              - type: object
+                properties:
+                  item: {type: object, nullable: true, example: null}
+
+  schemas:
+    # ---------------------------------------------------------- shared
+    EnvelopeBase:
+      type: object
+      properties:
+        success: {type: boolean}
+        errors:
+          description: Legacy field, practically always an empty array.
+          type: array
+          items: {}
+        csrfToken: {type: string, nullable: true}
+
+    ValidationError:
+      type: object
+      description: CakePHP entity validation errors, keyed by field then by rule name.
+      additionalProperties:
+        type: object
+        additionalProperties: {type: string}
+      example:
+        name: {_empty: "This field cannot be left empty"}
+
+    ErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            success: {type: boolean, example: false}
+            item: {type: object, nullable: true, example: null}
+            error:
+              oneOf:
+                - $ref: '#/components/schemas/ValidationError'
+                - type: array
+                  items: {type: string}
+
+    Currency:
+      type: string
+      description: Lowercase ISO-4217-ish currency code (plus `btc`). Not validated server-side beyond max. length.
+      enum:
+        [eur, gbp, chf, sek, nok, dkk, isk, pln, czk, huf, ron, bgn, uah, try,
+         usd, cad, aud, nzd, jpy, cny, krw, inr, php, thb, mxn, brl, ars, clp,
+         cop, ils, aed, sar, egp, zar, ngn, kes, idr, vnd, myr, twd, pkr, bdt,
+         lkr, btc]
+
+    AbstractObject:
+      type: object
+      properties:
+        id: {type: integer, readOnly: true}
+        created: {type: string, format: date-time, readOnly: true}
+        modified: {type: string, format: date-time, readOnly: true}
+        flags: {type: integer, description: 'Bitmask; meaning is per-entity (e.g. on Account, bit 1 = active, bit 2 = favourite).'}
+
+    # ---------------------------------------------------------- User
+    User:
+      allOf:
+        - $ref: '#/components/schemas/AbstractObject'
+        - type: object
+          description: '`password` and `api_key` are never serialized.'
+          properties:
+            name: {type: string, maxLength: 128}
+            email: {type: string, format: email}
+            role_id: {type: integer}
+            settings:
+              type: object
+              description: Free-form user preferences.
+              properties:
+                SUMMARY_ACCOUNTS:
+                  type: array
+                  items: {type: integer}
+                  description: Account ids (in display order) used by `/summary/*`.
+                helpDisplay: {type: boolean}
+              additionalProperties: true
+
+    LoginInput:
+      type: object
+      required: [username, password]
+      properties:
+        username: {type: string, format: email, description: The user's e-mail address.}
+        password: {type: string, format: password}
+
+    # ---------------------------------------------------------- Account
+    Account:
+      allOf:
+        - $ref: '#/components/schemas/AbstractObject'
+        - type: object
+          properties:
+            name: {type: string, maxLength: 100}
+            emoji: {type: string, maxLength: 8}
+            iban: {type: string, maxLength: 50, nullable: true}
+            balance_value: {type: number, format: double, readOnly: true, description: 'Server-computed from the transactions; 0 on create.'}
+            balance_currency: {$ref: '#/components/schemas/Currency'}
+            balance_value_closing: {type: number, format: double, readOnly: true, description: 'Only present on `/summary/complete`.'}
+            accounttype_id: {type: integer}
+            user_id: {type: integer, readOnly: true}
+
+    AccountInput:
+      type: object
+      required: [name, emoji, balance_currency, accounttype_id]
+      properties:
+        name: {type: string, maxLength: 100}
+        emoji: {type: string, maxLength: 8}
+        iban: {type: string, maxLength: 50}
+        balance_currency: {$ref: '#/components/schemas/Currency'}
+        accounttype_id: {type: integer}
+        flags: {type: integer, description: 'Ignored on create; editable on update (bit 1 = active, bit 2 = favourite).'}
+
+    AccountIndexResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: {$ref: '#/components/schemas/Account'}
+
+    AccountItemResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            item: {$ref: '#/components/schemas/Account'}
+
+    # ---------------------------------------------------------- Accounttype
+    Accounttype:
+      allOf:
+        - $ref: '#/components/schemas/AbstractObject'
+        - type: object
+          properties:
+            name: {type: string, maxLength: 128}
+
+    AccounttypeInput:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string, maxLength: 128}
+
+    AccounttypeIndexResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: {$ref: '#/components/schemas/Accounttype'}
+
+    AccounttypeItemResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            item: {$ref: '#/components/schemas/Accounttype'}
+
+    # ---------------------------------------------------------- Budget
+    Budget:
+      allOf:
+        - $ref: '#/components/schemas/AbstractObject'
+        - type: object
+          properties:
+            name: {type: string, maxLength: 128}
+            limit: {type: number, format: double}
+            currency: {type: string, maxLength: 3}
+            category_id: {type: integer}
+            category:
+              allOf:
+                - $ref: '#/components/schemas/Category'
+              description: 'Present on `/budget/index` and `/budget/list`; on `/budget/list` it additionally contains `transactions`.'
+            spent: {type: number, format: double, readOnly: true, description: 'Only present on `/budget/list`.'}
+            user_id: {type: integer, readOnly: true}
+
+    BudgetInput:
+      type: object
+      required: [name, category_id]
+      properties:
+        name: {type: string, maxLength: 128}
+        limit: {type: number, format: double}
+        currency: {type: string, maxLength: 3}
+        category_id: {type: integer}
+
+    BudgetTotal:
+      type: object
+      properties:
+        spentValue: {type: number, format: double, description: Sum of all budgets' spend (negative for expenses).}
+        total: {type: number, format: double, description: Sum of all budget limits.}
+        freeValue: {type: number, format: double}
+        spentPercent: {type: number, format: double, maximum: 100}
+        freePercent: {type: number, format: double}
+
+    BudgetIndexResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: {$ref: '#/components/schemas/Budget'}
+
+    BudgetItemResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            item: {$ref: '#/components/schemas/Budget'}
+
+    # ---------------------------------------------------------- Category
+    Category:
+      allOf:
+        - $ref: '#/components/schemas/AbstractObject'
+        - type: object
+          properties:
+            name: {type: string, maxLength: 128}
+            emoji: {type: string, maxLength: 16}
+            parent_id: {type: integer, nullable: true}
+            lft: {type: integer, readOnly: true}
+            rght: {type: integer, readOnly: true}
+            children:
+              type: array
+              items: {$ref: '#/components/schemas/Category'}
+              readOnly: true
+              description: Only populated by `/categories/tree`.
+            transactions:
+              type: array
+              items: {$ref: '#/components/schemas/Transaction'}
+              readOnly: true
+              description: Only populated by `/categories/view` and `/budget/list`.
+            budget:
+              type: array
+              items: {$ref: '#/components/schemas/Budget'}
+              readOnly: true
+              description: Only populated by `/categories/view`.
+            subscription:
+              type: array
+              items: {$ref: '#/components/schemas/Subscription'}
+              readOnly: true
+              description: Only populated by `/categories/view`.
+
+    CategoryInput:
+      type: object
+      required: [name, emoji]
+      properties:
+        name: {type: string, maxLength: 128}
+        emoji: {type: string, maxLength: 16}
+        parent_id: {type: integer, nullable: true}
+
+    CategoryIndexResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: {$ref: '#/components/schemas/Category'}
+
+    CategoryItemResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            item: {$ref: '#/components/schemas/Category'}
+
+    # ---------------------------------------------------------- Payment Method
+    PaymentMethod:
+      allOf:
+        - $ref: '#/components/schemas/AbstractObject'
+        - type: object
+          properties:
+            name: {type: string, maxLength: 128}
+            image:
+              type: string
+              maxLength: 128
+              nullable: true
+              readOnly: true
+              description: 'Uploaded image (prefix `upload/`), served via `/payment-method/logo/{id}`. No icons are shipped, values without prefix are ignored by the frontend. Set via `/payment-method/upload-logo/{id}` only.'
+
+    PaymentMethodInput:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string, maxLength: 128}
+        flags: {type: integer, description: 'Bit 1 = active.'}
+
+    PaymentMethodItemResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            item: {$ref: '#/components/schemas/PaymentMethod'}
+
+    # ---------------------------------------------------------- Subscription
+    Subscription:
+      allOf:
+        - $ref: '#/components/schemas/AbstractObject'
+        - type: object
+          properties:
+            name: {type: string, maxLength: 128}
+            logo:
+              type: string
+              maxLength: 128
+              nullable: true
+              readOnly: true
+              description: 'Without prefix: static frontend asset (`/a/assets/images/logos/<file>`). With prefix `upload/`: uploaded file, served via `/subscription/logo/{id}`.'
+            account_id: {type: integer}
+            account: {$ref: '#/components/schemas/Account'}
+            balance_value: {type: number, format: double}
+            interval: {type: string, maxLength: 128, nullable: true, description: '`<n>D`, `<n>W`, `<n>M` or `<n>Y`, e.g. `1M`. Forecasting supports `D`/`M`/`Y` only.', example: 1M}
+            start: {type: string, format: date, nullable: true}
+            end: {type: string, format: date, nullable: true}
+            term: {type: string, maxLength: 128, nullable: true}
+            noticeperiod: {type: string, maxLength: 128, nullable: true}
+            comments: {type: string, maxLength: 128, nullable: true}
+            description: {type: string, nullable: true}
+            category_id: {type: integer}
+            category: {$ref: '#/components/schemas/Category'}
+            paymentmethod_id: {type: integer}
+            payment_method: {$ref: '#/components/schemas/PaymentMethod'}
+            user_id: {type: integer, readOnly: true}
+
+    SubscriptionInput:
+      type: object
+      required: [name, account_id, balance_value, category_id]
+      properties:
+        name: {type: string, maxLength: 128}
+        account_id: {type: integer}
+        balance_value: {type: number, format: double}
+        interval: {type: string, maxLength: 128, example: 1M}
+        start: {type: string, format: date}
+        end: {type: string, format: date}
+        term: {type: string, maxLength: 128}
+        noticeperiod: {type: string, maxLength: 128}
+        comments: {type: string, maxLength: 128, description: 'Validator allows 512, but the DB column holds 128 characters.'}
+        description: {type: string}
+        category_id: {type: integer, description: 'Optional for the validator, but required by the DB (NOT NULL).'}
+        paymentmethod_id: {type: integer}
+
+    SubscriptionForecast:
+      allOf:
+        - $ref: '#/components/schemas/Subscription'
+        - type: object
+          properties:
+            execution: {type: string, format: date, description: Predicted execution date of this occurrence.}
+
+    SubscriptionStatistics:
+      type: object
+      properties:
+        count: {type: integer, description: Number of active subscriptions.}
+        count_without_interval: {type: integer, description: Active subscriptions whose interval cannot be parsed.}
+        monthly_total: {type: number, format: double}
+        annual_total: {type: number, format: double}
+        daily_total: {type: number, format: double}
+        monthly_average: {type: number, format: double, description: Monthly total divided by the number of priced subscriptions.}
+        most_expensive:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/SubscriptionCost'
+          nullable: true
+        cheapest:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/SubscriptionCost'
+          nullable: true
+
+    SubscriptionCost:
+      type: object
+      properties:
+        subscription: {$ref: '#/components/schemas/Subscription'}
+        monthly_cost: {type: number, format: double}
+
+    SubscriptionIndexResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: {$ref: '#/components/schemas/Subscription'}
+
+    SubscriptionItemResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            item: {$ref: '#/components/schemas/Subscription'}
+
+    # ---------------------------------------------------------- Piggybank
+    Piggybank:
+      allOf:
+        - $ref: '#/components/schemas/AbstractObject'
+        - type: object
+          properties:
+            account_id: {type: integer}
+            name: {type: string, maxLength: 128}
+            balance_value: {type: number, format: double, description: 'Recalculated from the transaction splits whenever `/piggybank/save` touches this piggybank.'}
+            balance_currency: {type: string, maxLength: 7}
+            start: {type: string, format: date, nullable: true}
+            end: {type: string, format: date, nullable: true}
+            target: {type: number, format: double}
+            description: {type: string, maxLength: 512, nullable: true}
+            user_id: {type: integer, readOnly: true}
+
+    PiggybankInput:
+      type: object
+      required: [account_id, name, balance_value, balance_currency, target]
+      properties:
+        account_id: {type: integer}
+        name: {type: string, maxLength: 128}
+        balance_value: {type: number, format: double}
+        balance_currency: {type: string, maxLength: 7}
+        start: {type: string, format: date}
+        end: {type: string, format: date}
+        target: {type: number, format: double}
+        description: {type: string, maxLength: 512}
+
+    PiggybankSplit:
+      type: object
+      properties:
+        transaction_id: {type: integer}
+        parts:
+          type: object
+          description: Map of piggybank id → amount assigned to it from this transaction. Serialized as `[]` if empty.
+          additionalProperties: {type: number, format: double}
+          example: {"3": 50.0, "7": 25.5}
+
+    PiggybankIndexResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: {$ref: '#/components/schemas/Piggybank'}
+
+    PiggybankItemResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            item: {$ref: '#/components/schemas/Piggybank'}
+
+    # ---------------------------------------------------------- Transaction
+    Transaction:
+      allOf:
+        - $ref: '#/components/schemas/AbstractObject'
+        - type: object
+          properties:
+            comment: {type: string, maxLength: 100}
+            balance_value: {type: number, format: double}
+            balance_currency: {type: string, maxLength: 100, description: 'DB default `EUR`.'}
+            category_id: {type: integer, nullable: true}
+            category: {$ref: '#/components/schemas/Category'}
+            account_id: {type: integer}
+            transfer_id: {type: integer, nullable: true, description: Free reference for transfers between accounts; not interpreted by the server.}
+            piggybank_id: {type: integer, nullable: true}
+            subscription_id: {type: integer, nullable: true}
+            user_id: {type: integer, readOnly: true}
+
+    TransactionInput:
+      type: object
+      required: [comment, balance_value, category_id, account_id]
+      properties:
+        comment: {type: string, maxLength: 100}
+        balance_value: {type: number, format: double}
+        balance_currency: {type: string, maxLength: 100}
+        category_id: {type: integer}
+        account_id: {type: integer}
+        transfer_id: {type: integer}
+        subscription_id: {type: integer}
+        created: {type: string, format: date-time, description: Booking date; defaults to now.}
+
+    TransactionItemResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            item: {$ref: '#/components/schemas/Transaction'}
+
+    ClosingBalanceRow:
+      type: object
+      description: One month; additional keys are account ids mapping to the sum of that account's bookings in the month.
+      properties:
+        year: {type: integer}
+        month: {type: integer, minimum: 1, maximum: 12}
+      additionalProperties: {type: number, format: double}
+      example: {year: 2026, month: 9, "3": -1234.56, "5": 200.0}
