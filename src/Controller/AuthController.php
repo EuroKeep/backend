@@ -21,6 +21,7 @@ use Authentication\Controller\Component\AuthenticationComponent;
 use Cake\ORM\TableRegistry;
 use eurokeep\Model\Table\UsersTable;
 use JetBrains\PhpStorm\NoReturn;
+use Throwable;
 use Override;
 
 /**
@@ -46,8 +47,26 @@ class AuthController extends AppController
 
     public function init()
     {
+        $user = null;
+        $isLoggedIn = false;
+
+        $result = $this->Authentication->getResult();
+
+        if ($result && $result->isValid()) {
+            try {
+                /** @var UsersTable $usersTable */
+                $usersTable = TableRegistry::getTableLocator()->get('Users');
+                $user = $usersTable->get($result->getData()->id);
+                $isLoggedIn = true;
+            } catch (Throwable) {
+                // Ignored here: If user is not found or inactive, this is only the init request for the login.
+            }
+        }
+
+        $this->set('user', $user);
+        $this->set('is_logged_in', $isLoggedIn);
         $this->set('enable_registration', filter_var(env('ENABLE_REGISTRATION', false), FILTER_VALIDATE_BOOLEAN));
-        $this->viewBuilder()->setOption('serialize', ['user', 'success', 'errors', 'enable_registration']);
+        $this->viewBuilder()->setOption('serialize', ['user', 'success', 'errors', 'enable_registration', 'is_logged_in']);
     }
 
     public function register()
