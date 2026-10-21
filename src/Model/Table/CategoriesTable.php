@@ -1,9 +1,22 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code.
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
 namespace eurokeep\Model\Table;
 
-use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -12,7 +25,7 @@ use Cake\Validation\Validator;
  * Categories Model
  *
  * @property \eurokeep\Model\Table\BudgetTable&\Cake\ORM\Association\HasMany $Budget
- * @property \eurokeep\Model\Table\MovementTable&\Cake\ORM\Association\HasMany $Movement
+ * @property \eurokeep\Model\Table\TransactionsTable&\Cake\ORM\Association\HasMany $Transaction
  * @property \eurokeep\Model\Table\SubscriptionTable&\Cake\ORM\Association\HasMany $Subscription
  *
  * @method \eurokeep\Model\Entity\Category newEmptyEntity()
@@ -49,7 +62,9 @@ class CategoriesTable extends Table
         $this->setPrimaryKey('id');
 
         $this->addBehavior('Timestamp');
-        $this->addBehavior('Tree');
+        $this->addBehavior('Tree', [
+            'recoverOrder' => ['lft' => 'ASC'],
+        ]);
 
         $this->belongsTo('ParentCategories', [
             'className' => 'Categories',
@@ -62,7 +77,7 @@ class CategoriesTable extends Table
             'className' => 'Categories',
             'foreignKey' => 'parent_id',
         ]);
-        $this->hasMany('Movement', [
+        $this->hasMany('Transactions', [
             'foreignKey' => 'category_id',
         ]);
         $this->hasMany('Subscription', [

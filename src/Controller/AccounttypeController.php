@@ -1,18 +1,27 @@
 <?php
 declare(strict_types=1);
 
-namespace eurokeep\Controller;
+/**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code.
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
 
-use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\Datasource\ResultSetInterface;
-use eurokeep\Model\Entity\Accounttype;
-use eurokeep\Model\Table\AccounttypeTable;
+namespace eurokeep\Controller;
 
 /**
  * Accounttype Controller
  *
- * @property AccounttypeTable $Accounttype
- * @method Accounttype[]|ResultSetInterface paginate($object = null, array $settings = [])
+ * @property \eurokeep\Model\Table\AccounttypeTable $Accounttype
+ * @method \eurokeep\Model\Entity\Accounttype[]|\Cake\Datasource\ResultSetInterface paginate($object = null, array $settings = [])
  */
 class AccounttypeController extends AuthenticatedController
 {
@@ -20,8 +29,9 @@ class AccounttypeController extends AuthenticatedController
      * Index method
      *
      */
-    public function index() :void
+    public function index(): void
     {
+        $this->request->allowMethod(['get']);
         $accounttypes = $this->paginate($this->Accounttype);
 
         $this->set(compact('accounttypes'));
@@ -33,17 +43,14 @@ class AccounttypeController extends AuthenticatedController
     /**
      * View method
      *
-     * @param int|null $accountTypeId Accounttype id.
-     * @throws RecordNotFoundException When record not found.
+     * @param mixed $accountTypeId Identifier of the accounttype. Not type-hinted so that a
+     *   missing or non-numeric route segment can be reported as a normal 400 response instead
+     *   of an uncaught ArgumentCountError/TypeError.
      */
-    public function view(int | null $accountTypeId = null): void
+    public function view($accountTypeId = null): void
     {
-        $accounttype = $this->Accounttype->get($accountTypeId, [
-            'contain' => [],
-        ]);
-
-        $this->set('accounttype', $accounttype);
-        $this->viewBuilder()->setOption('serialize', ['account', 'success']);
+        $this->request->allowMethod(['get']);
+        $this->viewEntity($this->Accounttype, $accountTypeId, 'Accounttype', ['contain' => []]);
     }
 
     /**
@@ -52,83 +59,33 @@ class AccounttypeController extends AuthenticatedController
      */
     public function add(): void
     {
-        $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['success']);
-
-        if (!$this->request->is('post')) {
-            $this->set('errors', [
-                'Method is not allowed'
-            ]);
-            return;
-        }
-
-        // Fetch data
-        $account = $this->request->getData();
-
-        // Add the Account
-        $entity = $this->Accounttype->newEmptyEntity();
-        $entity = $this->Accounttype->patchEntity($entity, $account);
-
-        if ($entity->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('error', $entity->getErrors());
-            $this->viewBuilder()->setOption('serialize', ['error']);
-            return;
-        }
-        $this->Accounttype->save($entity);
-
-        $this->set('account', $entity);
-        $this->viewBuilder()->setOption('serialize', ['success', 'account']);
+        $this->request->allowMethod(['post']);
+        $this->addEntity($this->Accounttype);
     }
 
     /**
      * Edit method
      *
-     * @param int|null $accountTypeId Accounttype id.
-     * @throws RecordNotFoundException When record not found.
+     * @param mixed $accountTypeId Identifier of the accounttype. Not type-hinted so that a
+     *   missing or non-numeric route segment can be reported as a normal 400 response instead
+     *   of an uncaught ArgumentCountError/TypeError.
      */
-    public function edit(int|null $accountTypeId = null): void
+    public function edit($accountTypeId = null): void
     {
-        // Check method
-        if (! $this->request->is(['patch', 'post', 'put'])) {
-            $this->http401('method not allowed');
-        }
-
-        $accounttype = $this->Accounttype->get($accountTypeId);
-
-        // Apply the new data
-        $accounttype = $this
-            ->Accounttype
-            ->patchEntity($accounttype, $this->request->getData());
-
-        // Haz errors?
-        if ($accounttype->hasErrors()) {
-            $this->response = $this->response->withStatus(400);
-            $this->set('error', $accounttype->getErrors());
-            $this->viewBuilder()->setOption('serialize', ['error']);
-            return;
-        }
-
-        // Cannot save?
-        if (!$this->Accounttype->save($accounttype)) {
-            $this->set('success', false);
-        }
-        $this->set(compact('accounttype'));
+        $this->request->allowMethod(['patch', 'put']);
+        $this->editEntity($this->Accounttype, $accountTypeId, 'Accounttype');
     }
 
     /**
      * Delete method
      *
-     * @param int|null $accountTypeId Accounttype id.
-     * @throws RecordNotFoundException When record not found.
+     * @param mixed $accountTypeId Identifier of the accounttype. Not type-hinted so that a
+     *   missing or non-numeric route segment can be reported as a normal 400 response instead
+     *   of an uncaught ArgumentCountError/TypeError.
      */
-    public function delete(int|null $accountTypeId = null): void
+    public function delete($accountTypeId = null): void
     {
-        $this->request->allowMethod(['post', 'delete']);
-        $accountType = $this->Accounttype->get($accountTypeId);
-
-        if (!$this->Accounttype->delete($accountType)) {
-            $this->addError('Error', 'Account type not deleted.');
-        }
+        $this->request->allowMethod(['delete']);
+        $this->deleteEntity($this->Accounttype, $accountTypeId, 'Accounttype');
     }
 }

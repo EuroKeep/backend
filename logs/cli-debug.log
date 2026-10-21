@@ -1,0 +1,10 @@
+2026-10-07 07:10:57 notice: fwrite(): Write of 2566 bytes failed with errno=32 Broken pipe in /app/vendor/cakephp/cakephp/src/Console/ConsoleOutput.php on line 300
+Trace:
+Cake\Error\ErrorTrap->handleError() [internal], line ??
+/app/vendor/cakephp/cakephp/src/Console/ConsoleOutput.php /app/vendor/cakephp/cakephp/src/Console/ConsoleOutput.php, line 300
+Cake\Console\ConsoleOutput->_write() /app/vendor/cakephp/cakephp/src/Console/ConsoleOutput.php, line 224
+Cake\Console\ConsoleOutput->write() /app/vendor/cakephp/cakephp/src/Error/Renderer/ConsoleExceptionRenderer.php, line 138
+Cake\Error\Renderer\ConsoleExceptionRenderer->write() /app/vendor/cakephp/cakephp/src/Error/ExceptionTrap.php, line 237
+Cake\Error\ExceptionTrap->handleException() [internal], line ??
+[main]
+

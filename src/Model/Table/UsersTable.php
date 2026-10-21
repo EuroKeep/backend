@@ -1,22 +1,36 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code.
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
 namespace eurokeep\Model\Table;
 
 use Cake\Datasource\EntityInterface;
 use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\Association\HasMany;
 use Cake\ORM\Behavior\TimestampBehavior;
-use eurokeep\Model\Entity\User;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use eurokeep\Model\Entity\User;
 use Override;
 
 /**
  * User Model
  *
  * @property AccountTable&HasMany $Account
- * @property MovementTable&HasMany $Movement
+ * @property TransactionsTable&HasMany $Transaction
  *
  * @method User newEmptyEntity()
  * @method User newEntity(array $data, array $options = [])
@@ -60,6 +74,8 @@ class UsersTable extends Table
             'dependent' => true,
             'cascadeCallbacks' => true,
         ]);
+
+        $this->getSchema()->setColumnType('settings', 'json');
     }
 
     /**
@@ -86,9 +102,13 @@ class UsersTable extends Table
             ->notEmptyString('email');
 
         $validator
-            ->numeric('password')
+            ->scalar('password')
             ->requirePresence('password', 'create')
             ->notEmptyString('password');
+
+        $validator
+            ->scalar('api_key')
+            ->allowEmptyString('api_key');
 
         $validator
             ->numeric('role_id')
@@ -127,6 +147,19 @@ class UsersTable extends Table
     {
         // VERIFY COMPLEXITY
         $user->password = $password;
+        $user->flags = 3; //Make this the binary operation!
+        $this->save($user);
+    }
+
+    /**
+     * I will set the apikey of the given $User.
+     * @param User $user Which user?
+     * @param string $apiKey ApiKey of the user.
+     */
+    public function setApiKey(User $user, string $apiKey): void
+    {
+        // VERIFY COMPLEXITY
+        $user->api_key = $apiKey;
         $user->flags = 3; //Make this the binary operation!
         $this->save($user);
     }

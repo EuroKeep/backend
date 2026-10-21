@@ -1,4 +1,4 @@
-# Eurokeep Test Package
+# EuroKeep Test Package
 This is the minimal code for the EuroKeep project.
 
 For now, it is sufficient, since there is not a build or release, yet.

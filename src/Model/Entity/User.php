@@ -1,13 +1,27 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code.
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
 namespace eurokeep\Model\Entity;
 
 use Authentication\PasswordHasher\DefaultPasswordHasher;
 use Cake\I18n\FrozenTime;
-use eurokeep\Model\Table\AccountTable;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use eurokeep\Model\Table\AccountTable;
 
 /**
  * User Entity
@@ -20,9 +34,10 @@ use Cake\ORM\TableRegistry;
  * @property string $email
  * @property string $password
  * @property int $role_id
+ * @property array $settings
  *
  * @property Account[] $account
- * @property Movement[] $movement
+ * @property Transaction[] $transaction
  */
 class User extends Entity
 {
@@ -42,9 +57,11 @@ class User extends Entity
         'name' => true,
         'email' => true,
         'password' => true,
+        'api_key' => true,
         'account' => true,
-        'movement' => true,
+        'transaction' => true,
         'role_id' => true,
+        'settings' => true
     ];
 
     /**
@@ -54,22 +71,24 @@ class User extends Entity
      */
     protected array $_hidden = [
         'password',
+        'api_key' => true,
     ];
 
     /**
      * @param string $password
-     * @return string
      */
-    protected function _setPassword(string $password) : string {
+    protected function _setPassword(string $password): string
+    {
         $hasher = new DefaultPasswordHasher();
 
         return $hasher->hash($password);
     }
 
     /**
-     * @return array
+     * I will return the total balance of all Accounts.
      */
-    final public function getTotalBalances() : array {
+    final public function getTotalBalances(): array
+    {
         /** @var AccountTable $accountTable */
         $accountTable = TableRegistry::getTableLocator()->get('Account');
 
@@ -86,9 +105,9 @@ class User extends Entity
 
 
         $totalBalances = [];
-        foreach($sum as $row){
+        foreach ($sum as $row) {
             $totalBalances[] = [
-                'currency' =>$row['balance_currency'],
+                'currency' => $row['balance_currency'],
                 'value' => $row['total_balance'],
             ];
         }

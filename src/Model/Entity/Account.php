@@ -1,13 +1,27 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * EuroKeep - Your Money. Your Data. (https://eurokeep.io)
+ * Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE file
+ * that was distributed with this source code.
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) 2026 IT Solutions Gleim (https://nox.kiwi)
+ * @link      https://eurokeep.io EuroKeep
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
 namespace eurokeep\Model\Entity;
 
-use eurokeep\Model\Table\AccountTable;
-use eurokeep\Model\Table\MovementTable;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use \DateTime;
+use DateTime;
+use eurokeep\Model\Table\AccountTable;
+use eurokeep\Model\Table\TransactionsTable;
 
 /**
  * Account Entity
@@ -25,7 +39,7 @@ use \DateTime;
  * @property int $user_id
  *
  * @property Accounttype $accounttype
- * @property Movement[] $movement
+ * @property Transaction[] $transactions
  * @property User $user
  */
 class Account extends Entity
@@ -51,18 +65,18 @@ class Account extends Entity
         'accounttype_id' => true,
         'user_id' => true,
         'accounttype' => true,
-        'movement' => true,
+        'transactions' => true,
         'user' => true,
     ];
 
     /**
-     * I will summarize the Movements on the Account and store the current balance to it.
+     * I will summarize the Transactions on the Account and store the current balance to it.
      */
     public function summarize(): void
     {
-        /** @var MovementTable $movementTable */
-        $movementTable = TableRegistry::getTableLocator()->get('Movement');
-        $value = $movementTable
+        /** @var TransactionsTable $transactionsTable */
+        $transactionsTable = TableRegistry::getTableLocator()->get('Transactions');
+        $value = $transactionsTable
             ->find()
             ->where([
                 'account_id' => $this->get('id')
@@ -77,36 +91,43 @@ class Account extends Entity
         $accountTable->save($this);
     }
 
-    public function streamMovements(DateTime $start, DateTime $end) : array
+    /**
+     * Streamtransactions
+     */
+    public function streamTransactions(DateTime $start, DateTime $end): array
     {
-        $MovementTable = TableRegistry::getTableLocator()->get('Movement');
-        return $MovementTable
+        $transactionsTable = TableRegistry::getTableLocator()->get('Transactions');
+        return $transactionsTable
             ->find()
             ->contain(['Categories'])
             ->where([
-                'Movement.created >=' => $start->format('Y-m-d'),
-                'Movement.created <' => $end->format('Y-m-d'),
+                'Transactions.created >=' => $start,
+                'Transactions.created <' => $end,
                 'account_id' => $this->id
             ])
-            ->order(['Movement.created' => 'DESC'])
+            ->orderByDesc('Transactions.created')
             ->limit(250)
             ->toArray();
 
     }
 
-    public function settlement(array $movements): array {
+    /**
+     * Settlement
+     */
+    public function settlement(array $transactions): array
+    {
         $settlement = [
             'expenses' => 0,
             'revenues' => 0,
             'settlement' => 0
         ];
-        foreach($movements as $movement) {
-            if($movement->balance_value < 0) {
-                $settlement['expenses'] += $movement->balance_value;
+        foreach ($transactions as $transaction) {
+            if ($transaction->balance_value < 0) {
+                $settlement['expenses'] += $transaction->balance_value;
             } else {
-                $settlement['revenues'] += $movement->balance_value;
+                $settlement['revenues'] += $transaction->balance_value;
             }
-            $settlement['settlement'] += $movement->balance_value;
+            $settlement['settlement'] += $transaction->balance_value;
         }
 
         return $settlement;
