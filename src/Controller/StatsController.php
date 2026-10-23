@@ -86,8 +86,8 @@ TXT;
      */
     private function budgets(): void
     {
-        $start ??= Chronos::now()->startOfMonth();
-        $end ??= Chronos::now()->endOfMonth();
+        $start = Chronos::now()->startOfMonth();
+        $end = Chronos::now()->endOfMonth();
         $now = Chronos::now();
         /** @var \eurokeep\Model\Table\BudgetTable $BudgetTable */
         $BudgetTable = TableRegistry::getTableLocator()->get('Budget');
