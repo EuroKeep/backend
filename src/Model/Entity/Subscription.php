@@ -143,11 +143,11 @@ class Subscription extends Entity
 
         $interval = $this->getInterval();
 
-        $now = Chronos::now();
+        $now = new Chronos('today')->startOfDay();
         $results = [];
         while ($current < $end) {
             // Only show future transactions.
-            if ($current > $now) {
+            if ($current >= $now) {
                 $myInterval = clone $this;
                 $myInterval->execution = $current->format('Y-m-' . $this->start->format('d'));
                 $results[] = $myInterval;
