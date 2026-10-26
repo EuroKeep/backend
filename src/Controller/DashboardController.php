@@ -37,21 +37,28 @@ class DashboardController extends AuthenticatedController
         /** @var AccountTable $AccountsTable */
         $AccountsTable = TableRegistry::getTableLocator()->get('Account');
 
-        $total = 0;
-        $accounts = $AccountsTable->find()->all();
+        $query = $AccountsTable
+            ->unhydratedFind();
+        $query
+            ->select([
+                'balance_currency',
+                'balance_value' => $query->func()->sum('balance_value'),
+            ])
+            ->where(['Account.user_id' => $this->user->id])
+            ->having(['balance_value != ' => 0])
+            ->groupBy(['balance_currency'])
+            ->orderByAsc('balance_currency');
 
-        foreach ($accounts as $account) {
-            // TODO: CALCULATE TO MAIN CURRENCY
-            $total += $account->balance_value;
+        $networth = [];
+        foreach ($query->all() as $row) {
+            $networth[] = [
+                'balance_value' => $row['balance_value'],
+                'balance_currency' => $row['balance_currency'],
+            ];
         }
 
-        $networth = [
-            'balance_value' => $total,
-            'balance_currency' => 'eur',
-        ];
-
-        $this->set('item', $networth);
+        $this->set('items', $networth);
         $this->set('success', true);
-        $this->viewBuilder()->setOption('serialize', ['item', 'success']);
+        $this->viewBuilder()->setOption('serialize', ['items', 'success']);
     }
 }
