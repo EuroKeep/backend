@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace eurokeep\Controller;
 
+use Cake\Database\Expression\QueryExpression;
 use Cake\ORM\TableRegistry;
 use eurokeep\Model\Table\AccountTable;
 use eurokeep\Model\Table\BudgetTable;
@@ -57,10 +58,9 @@ class SearchController extends AuthenticatedController
 
         return $AccountsTable
             ->find()
-            ->where([
-                'user_id' => $this->user->id,
-                'name LIKE ' => "%$search%",
-            ])
+            ->where(function (QueryExpression $exp) use ($search) {
+                return $exp->like('name', '%' . $search . '%');
+            })
             ->orderByAsc('name')
             ->toArray();
     }
@@ -72,9 +72,9 @@ class SearchController extends AuthenticatedController
 
         return $TransactionsTable
             ->find()
-            ->where([
-                'comment LIKE ' => "%$search%",
-            ])
+            ->where(function (QueryExpression $exp) use ($search) {
+                return $exp->like('comment', '%' . $search . '%');
+            })
             ->orderByDesc('created')
             ->toArray();
     }
@@ -86,9 +86,9 @@ class SearchController extends AuthenticatedController
 
         return $BudgetTable
             ->find()
-            ->where([
-                'name LIKE ' => "%$search%",
-            ])
+            ->where(function (QueryExpression $exp) use ($search) {
+                return $exp->like('name', '%' . $search . '%');
+            })
             ->toArray();
     }
 
@@ -99,9 +99,9 @@ class SearchController extends AuthenticatedController
 
         return $PiggybankTable
             ->find()
-            ->where([
-                'name LIKE ' => "%$search%",
-            ])
+            ->where(function (QueryExpression $exp) use ($search) {
+                return $exp->like('name', '%' . $search . '%');
+            })
             ->toArray();
     }
 
@@ -112,9 +112,9 @@ class SearchController extends AuthenticatedController
 
         return $SubscriptionTable
             ->find()
-            ->where([
-                'name LIKE ' => "%$search%",
-            ])
+            ->where(function (QueryExpression $exp) use ($search) {
+                return $exp->like('name', '%' . $search . '%');
+            })
             ->toArray();
     }
 }

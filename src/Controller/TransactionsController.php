@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace eurokeep\Controller;
 
+use Cake\Database\Expression\QueryExpression;
 use Cake\ORM\TableRegistry;
 use DateTime;
 
@@ -78,7 +79,9 @@ class TransactionsController extends AuthenticatedController
         $params = $this->request->getQueryParams();
         $comment = $params['comment'] ?? false;
         if ($comment) {
-            $qry->where(['Transactions.comment LIKE' => '%' . $comment . '%']);
+            $qry->where(function (QueryExpression $exp) use ($comment) {
+                return $exp->like('Transactions.comment', '%' . $comment . '%');
+            });
         }
         if ($start && $end) {
             $qry->where([
