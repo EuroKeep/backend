@@ -124,6 +124,8 @@ class TransactionsTable extends OwnedTable
     public function buildRules(RulesChecker $rules): RulesChecker
     {
         $rules->add($rules->existsIn(['category_id'], 'Categories'), ['errorField' => 'category_id']);
+        $rules->add($rules->existsIn(['account_id'], 'Account'), ['errorField' => 'account_id']);
+        $rules->add($rules->existsIn(['subscription_id'], 'Subscription'), ['errorField' => 'subscription_id']);
 
         return $rules;
     }

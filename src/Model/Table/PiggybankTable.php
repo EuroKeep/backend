@@ -20,6 +20,7 @@ namespace eurokeep\Model\Table;
 use Cake\Datasource\EntityInterface;
 use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\Behavior\TimestampBehavior;
+use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
 use eurokeep\Model\Entity\Piggybank;
 use Override;
@@ -129,5 +130,18 @@ class PiggybankTable extends OwnedTable
             ->notEmptyString('user_id');
 
         return parent::validationDefault($validator);
+    }
+
+    /**
+     * The Account table is scoped to the current user, so foreign accounts do not "exist" here.
+     *
+     * @inheritDoc
+     */
+    #[Override]
+    public function buildRules(RulesChecker $rules): RulesChecker
+    {
+        $rules->add($rules->existsIn(['account_id'], 'Account'), ['errorField' => 'account_id']);
+
+        return parent::buildRules($rules);
     }
 }
