@@ -47,6 +47,5 @@ class Accounttype extends Entity
         'modified' => true,
         'flags' => true,
         'name' => true,
-        'account' => true,
     ];
 }

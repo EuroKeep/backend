@@ -47,6 +47,5 @@ class Role extends Entity
         'modified' => true,
         'flags' => true,
         'name' => true,
-        'users' => true,
     ];
 }

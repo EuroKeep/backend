@@ -64,9 +64,6 @@ class Account extends Entity
         'balance_currency' => true,
         'accounttype_id' => true,
         'user_id' => true,
-        'accounttype' => true,
-        'transactions' => true,
-        'user' => true,
     ];
 
     /**

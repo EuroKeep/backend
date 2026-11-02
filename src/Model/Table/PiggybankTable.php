@@ -61,6 +61,10 @@ class PiggybankTable extends OwnedTable
 
         $this->addBehavior('Timestamp');
 
+        $this->belongsTo('Account', [
+            'foreignKey' => 'account_id',
+        ]);
+
         $this->hasMany('TransactionsToPiggybanks', [
             'foreignKey' => 'piggybank_id',
             'dependent' => true,

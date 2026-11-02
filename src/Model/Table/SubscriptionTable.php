@@ -122,6 +122,7 @@ class SubscriptionTable extends OwnedTable
         $validator
             ->scalar('interval')
             ->maxLength('interval', 128)
+            ->regex('interval', Subscription::INTERVAL_PATTERN, 'Must be a count and a unit (D, W, M, Y), e.g. 1M.')
             ->allowEmptyString('interval');
 
         $validator

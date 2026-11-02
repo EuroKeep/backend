@@ -53,8 +53,6 @@ class TransactionsToPiggybank extends Entity
         'balance_value' => true,
         'transaction_id' => true,
         'piggybank_id' => true,
-        'account' => true,
-        'piggybank' => true,
     ];
 
     /**
