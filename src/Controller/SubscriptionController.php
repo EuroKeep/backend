@@ -49,10 +49,7 @@ class SubscriptionController extends AuthenticatedController
             ->contain(['Categories', 'PaymentMethod'])
             ->orderByAsc('Subscription.name');
 
-        $filters = $this->getRequest()->getQueryParams()['filter'] ?? [];
-        foreach ($filters as $fieldname => $value) {
-            $qry->where(["$fieldname LIKE" => "$value%",]);
-        }
+        $this->applyFilters($qry, $this->Subscription);
 
         $subscriptions = $this
             ->paginate($qry);
