@@ -59,7 +59,6 @@ class Budget extends Entity
         'category_id' => true,
         'user_id' => true,
         'currency' => true,
-        'category' => true,
     ];
 
     /**

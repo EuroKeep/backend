@@ -61,9 +61,6 @@ class Category extends Entity
         'parent_id' => true,
         'lft' => true,
         'rght' => true,
-        'budget' => true,
-        'transactions' => true,
-        'subscription' => true,
     ];
 
     /**

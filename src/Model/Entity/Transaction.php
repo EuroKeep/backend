@@ -63,9 +63,6 @@ class Transaction extends Entity
         'transfer_id' => true,
         'piggybank_id' => true,
         'subscription_id' => true,
-        'category' => true,
-        'account' => true,
-        'subscription' => true
     ];
 
     /**
