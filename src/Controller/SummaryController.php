@@ -35,8 +35,8 @@ class SummaryController extends AuthenticatedController
     public function complete(): void
     {
         $this->request->allowMethod(['get']);
-        $start = Chronos::createFromInterface(new DateTime($this->request->getQueryParams()['start']))->startOfMonth();
-        $end = Chronos::createFromInterface(new DateTime($this->request->getQueryParams()['end']))->startOfMonth();
+        $start = Chronos::createFromInterface(new DateTime($this->dateParam('start')))->startOfMonth();
+        $end = Chronos::createFromInterface(new DateTime($this->dateParam('end')))->startOfMonth();
         /** @var \eurokeep\Model\Table\AccountTable $accountTable */
         $accountTable = TableRegistry::getTableLocator()->get('Account');
         /** @var \eurokeep\Model\Table\TransactionsTable $transactionTable */
@@ -114,8 +114,8 @@ class SummaryController extends AuthenticatedController
     public function closing(): void
     {
         $this->request->allowMethod(['get']);
-        $start = Chronos::createFromInterface(new DateTime($this->request->getQueryParams()['start']))->startOfMonth();
-        $end = Chronos::createFromInterface(new DateTime($this->request->getQueryParams()['end']))->startOfMonth();
+        $start = Chronos::createFromInterface(new DateTime($this->dateParam('start')))->startOfMonth();
+        $end = Chronos::createFromInterface(new DateTime($this->dateParam('end')))->startOfMonth();
         /** @var \eurokeep\Model\Table\AccountTable $accountTable */
         $accountTable = TableRegistry::getTableLocator()->get('Account');
         /** @var \eurokeep\Model\Table\TransactionsTable $transactionTable */
