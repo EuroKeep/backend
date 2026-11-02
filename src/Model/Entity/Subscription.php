@@ -48,6 +48,12 @@ use DateInterval;
 class Subscription extends Entity
 {
     /**
+     * A count and a unit (day, week, month, year), e.g. `1M`. The frontend's interval input sends a
+     * count of 0 (e.g. `0Y`) if there is none, so this is valid, but never treated as a real interval.
+     */
+    private const string INTERVAL_PATTERN = '/^(\d{1,4})([DWMY])$/';
+
+    /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
      *
      * Note that when '*' is set to true, this allows all unspecified fields to
@@ -81,17 +87,27 @@ class Subscription extends Entity
      */
     public function getInterval(): DateInterval|null
     {
-        if (!preg_match('/^(\d+)([MYD])$/', $this->interval, $matches)) {
+        $parsed = $this->parseInterval();
+        if ($parsed === null) {
             return null;
         }
 
-        $value = (int)$matches[1];
-        $unit = $matches[2];
-        return match ($unit) {
-            'M' => new DateInterval("P{$value}M"),
-            'Y' => new DateInterval("P{$value}Y"),
-            'D' => new DateInterval("P{$value}D"),
-        };
+        [$value, $unit] = $parsed;
+
+        return new DateInterval("P{$value}{$unit}");
+    }
+
+    /**
+     * I will split the interval into its count and unit.
+     * @return array{0: int, 1: string}|null I am null if there is no usable (advancing) interval.
+     */
+    private function parseInterval(): ?array
+    {
+        if (!preg_match(self::INTERVAL_PATTERN, (string)$this->interval, $matches) || (int)$matches[1] === 0) {
+            return null;
+        }
+
+        return [(int)$matches[1], $matches[2]];
     }
 
     /**
@@ -101,11 +117,13 @@ class Subscription extends Entity
      */
     public function getAnnualCost(): ?float
     {
-        if (!preg_match('/^(\d+)([DWMY])$/', (string)$this->interval, $matches) || (int)$matches[1] === 0) {
+        $parsed = $this->parseInterval();
+        if ($parsed === null) {
             return null;
         }
 
-        $perYear = ['D' => 365, 'W' => 52, 'M' => 12, 'Y' => 1][$matches[2]] / (int)$matches[1];
+        [$value, $unit] = $parsed;
+        $perYear = ['D' => 365, 'W' => 52, 'M' => 12, 'Y' => 1][$unit] / $value;
 
         return (float)$this->balance_value * $perYear;
     }
