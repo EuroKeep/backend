@@ -128,8 +128,8 @@ class TransactionsController extends AuthenticatedController
         $accountTable = TableRegistry::getTableLocator()->get('Account');
         $account = $accountTable->get($accountId);
 
-        $start = new DateTime($this->request->getQueryParams()['start'] ?? date('Y-m-d H:i:s'));
-        $end = new DateTime($this->request->getQueryParams()['end'] ?? date('Y-m-d H:i:s'));
+        $start = new DateTime($this->dateParam('start', date('Y-m-d H:i:s')));
+        $end = new DateTime($this->dateParam('end', date('Y-m-d H:i:s')));
 
         $transactions = $account->streamTransactions($start, $end);
 

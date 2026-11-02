@@ -27,6 +27,8 @@ use Cake\Event\EventInterface;
 use Cake\I18n\DateTime;
 use Cake\View\JsonView;
 use Closure;
+use DateTimeImmutable;
+use Exception;
 use eurokeep\Controller\Exception\ActionFailedException;
 use Override;
 
@@ -147,12 +149,39 @@ class AppController extends Controller
     }
 
     /**
+     * I will return the query parameter $name after verifying that it can be parsed as a date.
+     * Anything else aborts the action with a 400.
+     *
+     * @param string $name I am the name of the query parameter.
+     * @param string|null $default I am used if the parameter is missing. Without me, it is required.
+     */
+    protected function dateParam(string $name, ?string $default = null): string
+    {
+        $value = $this->request->getQueryParams()[$name] ?? null;
+        if ($value === null || $value === '') {
+            $value = $default;
+        }
+
+        if (!is_string($value)) {
+            $this->fail(400, "Missing or invalid date parameter '$name'");
+        }
+
+        try {
+            new DateTimeImmutable($value);
+        } catch (Exception) {
+            $this->fail(400, "Missing or invalid date parameter '$name'");
+        }
+
+        return $value;
+    }
+
+    /**
      * @return Chronos[]                   I return the real start and end normalized to server time.
      */
     protected function getRange(): array
     {
-        $startString = $this->request->getQueryParams()['start'] ?? 'first day of this month';
-        $endString = $this->request->getQueryParams()['end'] ?? 'first day of next month';
+        $startString = $this->dateParam('start', 'first day of this month');
+        $endString = $this->dateParam('end', 'first day of next month');
         $startObject = (new DateTime())->modify($startString);
         $endObject = (new DateTime())->modify($endString);
 
