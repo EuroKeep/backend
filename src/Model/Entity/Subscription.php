@@ -21,7 +21,6 @@ use Cake\Chronos\Chronos;
 use Cake\I18n\FrozenDate;
 use Cake\I18n\FrozenTime;
 use Cake\ORM\Entity;
-use DateInterval;
 
 
 /**
@@ -51,7 +50,7 @@ class Subscription extends Entity
      * A count and a unit (day, week, month, year), e.g. `1M`. The frontend's interval input sends a
      * count of 0 (e.g. `0Y`) if there is none, so this is valid, but never treated as a real interval.
      */
-    private const string INTERVAL_PATTERN = '/^(\d{1,4})([DWMY])$/';
+    public const string INTERVAL_PATTERN = '/^(\d{1,4})([DWMY])$/';
 
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
@@ -80,22 +79,6 @@ class Subscription extends Entity
         'comments' => true,
         'user_id' => true,
     ];
-
-    /**
-     * I will parse the given $interval from the database
-     * @return DateInterval|null I am the DateInterval Object that represents the actual Interval. If not possible, I am null.
-     */
-    public function getInterval(): DateInterval|null
-    {
-        $parsed = $this->parseInterval();
-        if ($parsed === null) {
-            return null;
-        }
-
-        [$value, $unit] = $parsed;
-
-        return new DateInterval("P{$value}{$unit}");
-    }
 
     /**
      * I will split the interval into its count and unit.
@@ -133,11 +116,7 @@ class Subscription extends Entity
      */
     public function isEligibleForForecast(): bool
     {
-        if (empty($this->interval) || empty($this->start)) {
-            return false;
-        }
-
-        return true;
+        return !empty($this->start) && $this->parseInterval() !== null;
     }
 
     /**
@@ -152,14 +131,15 @@ class Subscription extends Entity
         }
 
         // If the subscription ends before $end, use that instead to not show obsolete transactions.
+        // The last day of the subscription is still included.
         if ($this->end && $this->end->getTimestamp() < $end->getTimestamp()) {
-            $end = new Chronos($this->end->getTimestamp());
+            $end = new Chronos($this->end->getTimestamp())->endOfDay();
         }
 
         // Begin the interval calculation on the start of the Subsciption.
-        $current = new Chronos($this->start->getTimestamp());
-
-        $interval = $this->getInterval();
+        $start = new Chronos($this->start->getTimestamp());
+        $current = $start;
+        $occurrence = 0;
 
         $now = new Chronos('today')->startOfDay();
         $results = [];
@@ -167,12 +147,32 @@ class Subscription extends Entity
             // Only show future transactions.
             if ($current >= $now) {
                 $myInterval = clone $this;
-                $myInterval->execution = $current->format('Y-m-' . $this->start->format('d'));
+                $myInterval->execution = $current->format('Y-m-d');
                 $results[] = $myInterval;
             }
-            $current = $current->add($interval);
+            $current = $this->getExecution($start, ++$occurrence);
         }
 
         return $results;
+    }
+
+    /**
+     * I will calculate the n-th execution after $start. I always count from $start instead of the previous
+     * execution, so a short month does not shift all following ones: Monthly/annual executions keep the day
+     * of $start, clamped to the last day of shorter months (31.05. => 30.06. => 31.07.).
+     * @param Chronos $start I am the first execution.
+     * @param int $occurrence I am the number of intervals to skip ahead.
+     */
+    private function getExecution(Chronos $start, int $occurrence): Chronos
+    {
+        [$value, $unit] = $this->parseInterval();
+        $count = $value * $occurrence;
+
+        return match ($unit) {
+            'D' => $start->addDays($count),
+            'W' => $start->addWeeks($count),
+            'M' => $start->addMonths($count),
+            'Y' => $start->addYears($count),
+        };
     }
 }
