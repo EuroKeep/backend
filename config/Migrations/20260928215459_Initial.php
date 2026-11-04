@@ -237,7 +237,7 @@ class Initial extends BaseMigration
             ->addColumn('iban', 'string', [
                 'default' => null,
                 'limit' => 50,
-                'null' => false,
+                'null' => true,
             ])
             ->addColumn('balance_value', 'decimal', [
                 'default' => null,
