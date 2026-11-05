@@ -48,6 +48,8 @@ use Psr\SimpleCache\CacheInterface;
  */
 class BudgetTable extends OwnedTable
 {
+    public const int FLAG_ACTIVE = 1;
+
     /**
      * Initialize method
      *

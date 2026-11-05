@@ -54,6 +54,9 @@ use Psr\SimpleCache\CacheInterface;
  */
 class AccountTable extends OwnedTable
 {
+    public const int FLAG_ACTIVE = 1;
+    public const int FLAG_FAVOURITE = 2;
+
     /**
      * Initialize method
      *

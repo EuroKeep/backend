@@ -17,9 +17,13 @@ declare(strict_types=1);
 
 namespace eurokeep\Model\Table;
 
+use Cake\Datasource\EntityInterface;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use eurokeep\Model\Entity\Category;
+use InvalidArgumentException;
 
 /**
  * Categories Model
@@ -47,6 +51,12 @@ use Cake\Validation\Validator;
  */
 class CategoriesTable extends Table
 {
+    public const int FLAG_ACTIVE = 1;
+    public const int FLAG_INCOME_ROOT = 4;
+    public const int FLAG_EXPENSE_ROOT = 8;
+    public const int FLAG_TRANSFER_ROOT = 16;
+    public const int FLAGS_ROOT_TYPE = self::FLAG_INCOME_ROOT | self::FLAG_EXPENSE_ROOT | self::FLAG_TRANSFER_ROOT;
+
     /**
      * Initialize method
      *

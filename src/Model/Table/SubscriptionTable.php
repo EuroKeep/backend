@@ -47,6 +47,8 @@ use Override;
  */
 class SubscriptionTable extends OwnedTable
 {
+    public const int FLAG_ACTIVE = 1;
+
     /**
      * Initialize method
      *

@@ -470,6 +470,10 @@ class DefaultDataSeed extends BaseSeed
 
     /**
      * 182 categories (nested set, ordered by lft).
+     *
+     * Flags: bit 2 (4) = the single "Einnahmen" root node (id 65),
+     * bit 3 (8) = the single "Ausgaben" root node (id 64),
+     * bit 4 (16) = the category for transfers / Umbuchungen (id 76).
      */
     private function categories(): array
     {
@@ -478,7 +482,7 @@ class DefaultDataSeed extends BaseSeed
                 'id' => 64,
                 'created' => '2026-02-16 09:20:30',
                 'modified' => '2026-02-16 09:20:30',
-                'flags' => 3,
+                'flags' => 11,
                 'emoji' => '➖',
                 'name' => 'Ausgaben',
                 'parent_id' => null,
@@ -1996,7 +2000,7 @@ class DefaultDataSeed extends BaseSeed
                 'id' => 65,
                 'created' => '2026-02-16 09:20:44',
                 'modified' => '2026-02-16 09:20:44',
-                'flags' => 3,
+                'flags' => 7,
                 'emoji' => '➕',
                 'name' => 'Einnahmen',
                 'parent_id' => null,
@@ -2469,7 +2473,7 @@ class DefaultDataSeed extends BaseSeed
                 'id' => 76,
                 'created' => '2026-02-23 09:14:34',
                 'modified' => '2026-02-23 09:14:34',
-                'flags' => 3,
+                'flags' => 19,
                 'emoji' => '🔄',
                 'name' => 'Umbuchung',
                 'parent_id' => null,

@@ -49,6 +49,8 @@ use Override;
  */
 class TransactionsTable extends OwnedTable
 {
+    public const int FLAG_ACTIVE = 1;
+
     /**
      * Initialize method
      *

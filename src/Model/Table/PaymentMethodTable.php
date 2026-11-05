@@ -44,6 +44,8 @@ use Cake\Validation\Validator;
  */
 class PaymentMethodTable extends Table
 {
+    public const int FLAG_ACTIVE = 1;
+
     /**
      * Initialize method
      *
