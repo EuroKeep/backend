@@ -1,1 +1,3 @@
 logs*
+config/app_local.php
+config/.env

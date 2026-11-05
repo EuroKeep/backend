@@ -23,10 +23,12 @@ namespace eurokeep\Controller;
 
 use Authentication\AuthenticationService;
 use Cake\Database\Exception\QueryException;
+use Cake\Datasource\EntityInterface;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Exception\UnauthorizedException;
 use Cake\Http\Response;
+use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use eurokeep\Model\Behavior\LogoBehavior;
@@ -106,6 +108,53 @@ class AuthenticatedController extends AppController
     }
 
     /**
+     * I will save the given $item. A violated application rule (e.g. an account_id that does not
+     * belong to the current user) is a client error, everything else is an internal one.
+     */
+    private function saveOrFail(Table $table, EntityInterface $item): void
+    {
+        if ($table->save($item)) {
+            return;
+        }
+
+        if ($item->hasErrors()) {
+            $this->failMany(400, $item->getErrors());
+        }
+
+        $this->fail(500, 'Internal error');
+    }
+
+    /**
+     * I will apply the `filter[<column>]=<prefix>` query parameters to the given $query.
+     *
+     * The array key comes from the client and CakePHP treats a condition key as raw SQL, so only
+     * real columns of $table are accepted (plain or prefixed with the table's alias). The field is
+     * always qualified, because the same column name may exist in a contained association.
+     */
+    final protected function applyFilters(SelectQuery $query, Table $table): void
+    {
+        $filters = $this->request->getQueryParams()['filter'] ?? [];
+        if (!is_array($filters)) {
+            $this->fail(400, 'Invalid filter');
+        }
+
+        $alias = $table->getAlias();
+        foreach ($filters as $field => $value) {
+            $column = (string)$field;
+            if (str_starts_with($column, $alias . '.')) {
+                $column = substr($column, strlen($alias) + 1);
+            }
+
+            if (!is_string($value) || !$table->getSchema()->hasColumn($column)) {
+                $this->fail(400, 'Invalid filter');
+            }
+
+            // Bound as string, a prefix like `2%` is no valid value for the integer type of e.g. `id`.
+            $query->where(["$alias.$column LIKE" => "$value%"], ["$alias.$column" => 'string']);
+        }
+    }
+
+    /**
      * I am the generic "edit" JSON API action shared by all CRUD controllers.
      *
      * I validate the identifier and the request body, load the entity, patch and validate it,
@@ -148,17 +197,14 @@ class AuthenticatedController extends AppController
         }
 
         // Apply the new data
-        $item = $table->patchEntity($item, $data);
+        $item = $table->patchEntity($item, $data, ['associated' => []]);
 
         // Haz errors?
         if ($item->hasErrors()) {
             $this->failMany(400, $item->getErrors());
         }
 
-        // Cannot save?
-        if (!$table->save($item)) {
-            $this->fail(500, 'Internal error');
-        }
+        $this->saveOrFail($table, $item);
 
         $this->set('item', $item);
         $this->set('success', true);
@@ -220,17 +266,14 @@ class AuthenticatedController extends AppController
         }
 
         $item = $table->newEmptyEntity();
-        $item = $table->patchEntity($item, $extraData + $data);
+        $item = $table->patchEntity($item, $extraData + $data, ['associated' => []]);
 
         // Haz errors?
         if ($item->hasErrors()) {
             $this->failMany(400, $item->getErrors());
         }
 
-        // Cannot save?
-        if (!$table->save($item)) {
-            $this->fail(500, 'Internal error');
-        }
+        $this->saveOrFail($table, $item);
 
         $this->response = $this->response->withStatus(201);
         $this->set('item', $item);
@@ -385,8 +428,11 @@ class AuthenticatedController extends AppController
 
         $mimeType = array_search(pathinfo($path, PATHINFO_EXTENSION), LogoBehavior::MIME_TYPES, true);
 
+        // Uploads are untrusted: an SVG opened directly must neither render inline nor run scripts.
+        // <img> ignores Content-Disposition. Inline styles/data: stay allowed for SVG logos.
         return $this->response
-            ->withFile($path)
-            ->withType((string)$mimeType);
+            ->withFile($path, ['download' => true, 'name' => basename($path)])
+            ->withType((string)$mimeType)
+            ->withHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; sandbox");
     }
 }

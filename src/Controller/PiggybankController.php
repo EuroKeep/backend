@@ -42,10 +42,7 @@ class PiggybankController extends AuthenticatedController
         $this->request->allowMethod(['get']);
         $qry = $this->Piggybank->find();
 
-        $filters = $this->getRequest()->getQueryParams()['filter'] ?? [];
-        foreach ($filters as $fieldname => $value) {
-            $qry->where(["$fieldname LIKE" => "$value%",]);
-        }
+        $this->applyFilters($qry, $this->Piggybank);
 
         $this->set('items', $this->paginate($qry));
         $this->set('success', true);
