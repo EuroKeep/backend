@@ -91,7 +91,8 @@ class BudgetTable extends OwnedTable
 
         $validator
             ->numeric('limit')
-            ->notEmptyString('limit');
+            ->notEmptyString('limit')
+            ->greaterThan('limit', 0);
 
         $validator
             ->integer('category_id')
