@@ -118,7 +118,7 @@ class PiggybankTable extends OwnedTable
         $validator
             ->numeric('target')
             ->requirePresence('target', 'create')
-            ->notEmptyString('target');
+            ->greaterThan('target', 0);
 
         $validator
             ->scalar('description')
