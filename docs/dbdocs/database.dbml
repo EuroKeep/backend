@@ -76,7 +76,7 @@ Table role {
   id integer [pk, increment, note: 'Primärschlüssel']
   created datetime [not null, default: `CURRENT_TIMESTAMP`]
   modified datetime [not null, default: `CURRENT_TIMESTAMP`]
-  flags integer [not null, default: 0, note: 'Undokumentierte Bitmask-Reserve. Für `role` bislang kein Bit im Code interpretiert.']
+  flags integer [not null, default: 0, note: 'Bitmask. `1` (`FLAG_ACTIVE`) = aktiv, Platzhalter-Bit in jeder Tabelle; weitere Bits nicht vergeben.']
   name varchar(128) [not null, note: 'Anzeigename der Rolle, z. B. "admin", "user".']
 
   Note: '''

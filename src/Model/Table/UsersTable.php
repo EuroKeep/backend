@@ -51,6 +51,7 @@ use Override;
 class UsersTable extends Table
 {
     public const int FLAG_ACTIVE = 1;
+    public const int FLAG_UNLOCKED = 2;
 
     /**
      * Initialize method
@@ -149,7 +150,7 @@ class UsersTable extends Table
     {
         // VERIFY COMPLEXITY
         $user->password = $password;
-        $user->flags = 3; //Make this the binary operation!
+        $user->flags = self::FLAG_ACTIVE | self::FLAG_UNLOCKED;
         $this->save($user);
     }
 
@@ -162,7 +163,7 @@ class UsersTable extends Table
     {
         // VERIFY COMPLEXITY
         $user->api_key = $apiKey;
-        $user->flags = 3; //Make this the binary operation!
+        $user->flags = self::FLAG_ACTIVE | self::FLAG_UNLOCKED;
         $this->save($user);
     }
 }
