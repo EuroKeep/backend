@@ -178,8 +178,10 @@ class CategoriesController extends AuthenticatedController
         } catch (DatabaseException $exception) {
             // e.g. moving a Category into itself or one of its descendants
             $this->fail(400, $exception->getMessage());
-        } catch (PersistenceFailedException) {
-            $this->fail(400, 'Parent category not found');
+        } catch (PersistenceFailedException $exception) {
+            // e.g. unknown parent, or the root convention of CategoriesTable::buildRules()
+            // (no new root, no root below another Category)
+            $this->failMany(400, $exception->getEntity()->getErrors());
         }
 
         $this->set('item', $this->Categories->get($item->id));
