@@ -43,7 +43,6 @@ class CategoriesController extends AuthenticatedController
     public function index(): void
     {
         $this->request->allowMethod(['get']);
-        $this->Categories->recover();
         $categoriesQuery = $this
             ->Categories
             ->find()
@@ -65,7 +64,6 @@ class CategoriesController extends AuthenticatedController
     public function view($entityId = null): void
     {
         $this->request->allowMethod(['get']);
-        $this->Categories->recover();
         $this->viewEntity($this->Categories, $entityId, 'Category', ['contain' => ['Budget', 'Transactions', 'Subscription']]);
     }
 
@@ -75,8 +73,8 @@ class CategoriesController extends AuthenticatedController
     public function add(): void
     {
         $this->request->allowMethod(['post']);
-        $this->Categories->recover();
         $this->addEntity($this->Categories);
+        $this->Categories->recover();
     }
 
     /**
@@ -103,8 +101,8 @@ class CategoriesController extends AuthenticatedController
     public function delete($entityId = null): void
     {
         $this->request->allowMethod(['delete']);
-        $this->Categories->recover();
         $this->deleteEntity($this->Categories, $entityId, 'Category');
+        $this->Categories->recover();
     }
 
     /**

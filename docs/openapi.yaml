@@ -2086,7 +2086,7 @@ components:
       name: filter
       in: query
       required: false
-      description: 'Map of field name to a `LIKE`-prefix value, e.g. `filter[name]=Grocer`.'
+      description: 'Map of column name to a `LIKE`-prefix value, e.g. `filter[name]=Grocer`. Unknown columns are rejected with a 400.'
       style: deepObject
       explode: true
       schema:
