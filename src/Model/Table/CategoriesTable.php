@@ -57,6 +57,10 @@ class CategoriesTable extends Table
     public const int FLAG_TRANSFER_ROOT = 16;
     public const int FLAGS_ROOT_TYPE = self::FLAG_INCOME_ROOT | self::FLAG_EXPENSE_ROOT | self::FLAG_TRANSFER_ROOT;
 
+    public const int ID_EXPENSE_ROOT = 64;
+    public const int ID_INCOME_ROOT = 65;
+    public const int ID_TRANSFER_ROOT = 76;
+
     /**
      * Initialize method
      *
