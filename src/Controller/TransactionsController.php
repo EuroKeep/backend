@@ -30,8 +30,8 @@ use eurokeep\Model\Table\TransactionsTable;
 class TransactionsController extends AuthenticatedController
 {
     public array $paginate = [
-        'limit' => 1000,
-        'maxLimit' => 1000,
+        'limit' => 10000,
+        'maxLimit' => 10000,
         'order' => [
             'Transactions.created' => 'desc',
         ],
