@@ -124,7 +124,8 @@ class CategoriesController extends AuthenticatedController
      *
      * I move a Category to a new parent (`parent_id`, `null` = root) and to the given zero-based
      * `position` among its new siblings. Moving a Category into itself or one of its own
-     * descendants is rejected with a 400.
+     * descendants is rejected with a 400. So is moving a Category to the root level or moving
+     * one of the three root Categories (see CategoriesTable::FLAGS_ROOT_TYPE).
      *
      * @param mixed $entityId Identifier of the Category. Not type-hinted so that a missing or
      *   non-numeric route segment can be reported as a normal 400 response instead of an

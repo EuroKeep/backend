@@ -31,7 +31,7 @@ use Cake\ORM\Entity;
  *
  * @property User[] $users
  */
-class Role extends Entity
+class Role extends AbstractEntity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().

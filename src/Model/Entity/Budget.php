@@ -39,7 +39,7 @@ use eurokeep\Model\Table\CategoriesTable;
  *
  * @property Category $category
  */
-class Budget extends Entity
+class Budget extends AbstractEntity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().

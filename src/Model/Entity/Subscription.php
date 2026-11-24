@@ -44,7 +44,7 @@ use Cake\ORM\Entity;
  * @property int $user_id
  * @property string $execution
  */
-class Subscription extends Entity
+class Subscription extends AbstractEntity
 {
     /**
      * A count and a unit (day, week, month, year), e.g. `1M`. The frontend's interval input sends a

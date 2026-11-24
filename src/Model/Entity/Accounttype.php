@@ -31,7 +31,7 @@ use Cake\ORM\Entity;
  *
  * @property Account[] $account
  */
-class Accounttype extends Entity
+class Accounttype extends AbstractEntity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
