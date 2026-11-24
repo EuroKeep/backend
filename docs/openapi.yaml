@@ -819,6 +819,8 @@ paths:
         Re-parents the category (`parent_id`, `null` = top level) and puts it at the zero-based
         `position` among its new siblings (clamped to the last position). Descendants move along.
         Accepts `PATCH` or `PUT`. Moving a category below itself or one of its descendants fails with 400.
+        So does moving a category to the top level or moving one of the three root categories
+        (see the `Category` schema).
       parameters:
         - $ref: '#/components/parameters/IdPathParam'
         - $ref: '#/components/parameters/CsrfTokenHeader'
@@ -850,7 +852,7 @@ paths:
     delete:
       tags: [Categories]
       summary: Delete a category
-      description: Also deletes all descendant categories (TreeBehavior). Fails with 409 while budgets, subscriptions or transactions still reference one of them.
+      description: Also deletes all descendant categories (TreeBehavior). Fails with 409 while budgets, subscriptions or transactions still reference one of them, and always for the three root categories.
       parameters:
         - $ref: '#/components/parameters/IdPathParam'
         - $ref: '#/components/parameters/CsrfTokenHeader'
@@ -2086,7 +2088,7 @@ components:
       name: filter
       in: query
       required: false
-      description: 'Map of field name to a `LIKE`-prefix value, e.g. `filter[name]=Grocer`.'
+      description: 'Map of column name to a `LIKE`-prefix value, e.g. `filter[name]=Grocer`. Unknown columns are rejected with a 400.'
       style: deepObject
       explode: true
       schema:
@@ -2334,6 +2336,11 @@ components:
       allOf:
         - $ref: '#/components/schemas/AbstractObject'
         - type: object
+          description: |
+            There are exactly three root categories (`parent_id = null`), each marked by one bit of
+            `flags`: `4` = income root, `8` = expense root, `16` = transfer root. Every category
+            belongs to the type of its root; children never carry one of these bits. Adding a
+            further root, moving a root or deleting a root fails with 400 / 409.
           properties:
             name: {type: string, maxLength: 128}
             emoji: {type: string, maxLength: 16}

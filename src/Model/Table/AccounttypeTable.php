@@ -51,6 +51,8 @@ use Psr\SimpleCache\CacheInterface;
  */
 class AccounttypeTable extends Table
 {
+    public const int FLAG_ACTIVE = 1;
+
     /**
      * Initialize method
      *

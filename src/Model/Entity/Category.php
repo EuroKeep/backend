@@ -41,7 +41,7 @@ use Cake\ORM\TableRegistry;
  * @property Transaction[] $transaction
  * @property Subscription[] $subscription
  */
-class Category extends Entity
+class Category extends AbstractEntity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
@@ -87,6 +87,9 @@ class Category extends Entity
      */
     public function getTransactions(Chronos $start, Chronos $end, string $currency, bool $useTree = true, bool $spendingOnly = true): ResultSetInterface
     {
+        // @todo Currency conversion: instead of only taking Accounts in $currency into account,
+        //  take all Accounts and convert their Transactions' balance_value into $currency (rate of
+        //  the Transaction's date). Until then, Accounts in other currencies are silently left out.
         $accountIds = TableRegistry::getTableLocator()
             ->get('Account')
             ->find()

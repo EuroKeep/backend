@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace eurokeep\Controller;
 
 use Cake\Database\Expression\QueryExpression;
+use eurokeep\Model\Table\AccountTable;
 
 /**
  * Account Controller
@@ -41,9 +42,9 @@ class AccountController extends AuthenticatedController
         $query = $this
             ->Account
             ->find()
-            ->where(fn(QueryExpression $exp) => $exp->add('(flags & 1) <> 0'))
+            ->where(fn(QueryExpression $exp) => $exp->add('(flags & ' . AccountTable::FLAG_ACTIVE . ') <> 0'))
             ->orderBy(fn(QueryExpression $exp, $q) => [
-                '(flags & 2)' => 'DESC',
+                '(flags & ' . AccountTable::FLAG_FAVOURITE . ')' => 'DESC',
                 'Account.name' => 'ASC',
             ]);
 
@@ -60,7 +61,7 @@ class AccountController extends AuthenticatedController
         $this->addEntity($this->Account, [
             'user_id' => $this->user->id,
             'balance_value' => 0,
-            'flags' => 1,
+            'flags' => AccountTable::FLAG_ACTIVE,
         ]);
     }
 
@@ -114,7 +115,7 @@ class AccountController extends AuthenticatedController
         $this->request->allowMethod(['post']);
         // Fetch & Toggle
         $entity = $this->Account->get($entityId);
-        $entity->flags ^= 2;
+        $entity->flags ^= AccountTable::FLAG_FAVOURITE;
         $this->Account->save($entity);
 
         // Response

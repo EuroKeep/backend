@@ -35,8 +35,8 @@ class SummaryController extends AuthenticatedController
     public function complete(): void
     {
         $this->request->allowMethod(['get']);
-        $start = Chronos::createFromInterface(new DateTime($this->dateParam('start')))->startOfMonth();
-        $end = Chronos::createFromInterface(new DateTime($this->dateParam('end')))->startOfMonth();
+        $start = Chronos::createFromInterface(new DateTime($this->dateParam('start')))->startOfDay();
+        $end = Chronos::createFromInterface(new DateTime($this->dateParam('end')))->startOfDay();
         /** @var \eurokeep\Model\Table\AccountTable $accountTable */
         $accountTable = TableRegistry::getTableLocator()->get('Account');
         /** @var \eurokeep\Model\Table\TransactionsTable $transactionTable */
@@ -61,7 +61,7 @@ class SummaryController extends AuthenticatedController
             ->where([
                 'account_id IN' => $accountIds,
                 'Transactions.created >= ' => $start,
-                'Transactions.created <= ' => $end,
+                'Transactions.created <' => $end,
             ])
             ->orderByAsc('Transactions.created')
             ->all()
@@ -74,12 +74,12 @@ class SummaryController extends AuthenticatedController
                     'SUM(CASE WHEN created < :start THEN balance_value ELSE 0 END)',
                 ),
                 'current' => $query->expr(
-                    'SUM(CASE WHEN created >= :start AND created <= :end THEN balance_value ELSE 0 END)',
+                    'SUM(CASE WHEN created >= :start AND created < :end THEN balance_value ELSE 0 END)',
                 ),
             ])
             ->where([
                 'account_id IN' => $accountIds,
-                'created <=' => $end,
+                'created <' => $end,
             ])
             ->bind(':start', $start, 'datetime')
             ->bind(':end', $end, 'datetime')
@@ -114,8 +114,8 @@ class SummaryController extends AuthenticatedController
     public function closing(): void
     {
         $this->request->allowMethod(['get']);
-        $start = Chronos::createFromInterface(new DateTime($this->dateParam('start')))->startOfMonth();
-        $end = Chronos::createFromInterface(new DateTime($this->dateParam('end')))->startOfMonth();
+        $start = Chronos::createFromInterface(new DateTime($this->dateParam('start')))->startOfDay();
+        $end = Chronos::createFromInterface(new DateTime($this->dateParam('end')))->startOfDay();
         /** @var \eurokeep\Model\Table\AccountTable $accountTable */
         $accountTable = TableRegistry::getTableLocator()->get('Account');
         /** @var \eurokeep\Model\Table\TransactionsTable $transactionTable */
@@ -147,7 +147,7 @@ class SummaryController extends AuthenticatedController
             ->where([
                 'account_id IN' => $accountIds,
                 'created >=' => $start,
-                'created <=' => $end,
+                'created <' => $end,
             ])
             ->groupBy([
                 'account_id',
@@ -157,7 +157,7 @@ class SummaryController extends AuthenticatedController
 
         // one row per month in the requested range, one column per account, prefilled with 0
         $months = [];
-        for ($cursor = $start; $cursor->lessThanOrEquals($end); $cursor = $cursor->addMonths(1)) {
+        for ($cursor = $start->startOfMonth(); $cursor->lessThan($end); $cursor = $cursor->addMonths(1)) {
             $key = $cursor->format('Y-m');
             $months[$key] = ['year' => (int)$cursor->format('Y'), 'month' => (int)$cursor->format('n')];
             foreach ($accountIds as $accountId) {

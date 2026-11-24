@@ -29,7 +29,7 @@ use Cake\ORM\Entity;
  * @property string $name
  * @property string|null $image Uploaded via PaymentMethodController::uploadLogo(), see LogoBehavior.
  */
-class PaymentMethod extends Entity
+class PaymentMethod extends AbstractEntity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().

@@ -42,7 +42,7 @@ use eurokeep\Model\Table\TransactionsTable;
  * @property Transaction[] $transactions
  * @property User $user
  */
-class Account extends Entity
+class Account extends AbstractEntity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().

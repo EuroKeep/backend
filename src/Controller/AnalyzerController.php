@@ -28,6 +28,8 @@ use eurokeep\Model\Table\TransactionsTable;
  */
 class AnalyzerController extends AuthenticatedController
 {
+    private const string CURRENCY = 'eur';
+
     /**
      * @return void
      * @throws \DateMalformedStringException
@@ -35,12 +37,14 @@ class AnalyzerController extends AuthenticatedController
     public function category(): void
     {
         $this->request->allowMethod(['get']);
-        $start = Chronos::createFromInterface(new DateTime($this->dateParam('start')))->startOfMonth();
-        $end = Chronos::createFromInterface(new DateTime($this->dateParam('end')))->startOfMonth();
-        $categoryId = $this->request->getQueryParams()['categoryId'] ?? 64;
+        $start = Chronos::createFromInterface(new DateTime($this->dateParam('start')))->startOfDay();
+        $end = Chronos::createFromInterface(new DateTime($this->dateParam('end')))->startOfDay();
+        $currency = self::CURRENCY;
 
         /** @var CategoriesTable $categoriesTable */
         $categoriesTable = TableRegistry::getTableLocator()->get('Categories');
+        $categoryId = $this->request->getQueryParams()['categoryId']
+            ?? $categoriesTable->getRootByFlag(CategoriesTable::FLAG_EXPENSE_ROOT)->id;
         $categories = $categoriesTable
             ->find()
             ->where(['parent_id' => (int)$categoryId])
@@ -51,7 +55,7 @@ class AnalyzerController extends AuthenticatedController
         $total = 0;
         $transactions = [];
 
-        $categoryTransactions = $category->getTransactions($start, $end, 'eur', false, true);
+        $categoryTransactions = $category->getTransactions($start, $end, $currency, false, true);
         foreach ($categoryTransactions as $transaction) {
             $transactions[] = $transaction;
         }
@@ -66,7 +70,7 @@ class AnalyzerController extends AuthenticatedController
 
         // Now children
         foreach ($categories as $category) {
-            $categoryTransactions = $category->getTransactions($start, $end, 'eur', true, true);
+            $categoryTransactions = $category->getTransactions($start, $end, $currency, true, true);
             $value = -TransactionsTable::summarize($categoryTransactions);
             foreach ($categoryTransactions as $transaction) {
                 $total += $transaction->balance_value;

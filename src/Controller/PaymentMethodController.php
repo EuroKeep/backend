@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace eurokeep\Controller;
 
 use Cake\Http\Response;
+use eurokeep\Model\Table\PaymentMethodTable;
 
 /**
  * PaymentMethod Controller
@@ -34,7 +35,7 @@ class PaymentMethodController extends AuthenticatedController
     /**
      * Index method
      *
-     * Only active payment methods (flags & 1) are listed, unless the query param `all=1` is given
+     * Only active payment methods (PaymentMethodTable::FLAG_ACTIVE) are listed, unless the query param `all=1` is given
      * (used by the settings area to manage inactive payment methods as well).
      */
     public function index(): void
@@ -45,7 +46,7 @@ class PaymentMethodController extends AuthenticatedController
             ->orderBy(['PaymentMethod.name' => 'ASC']);
 
         if ($this->request->getQuery('all') !== '1') {
-            $query->where(['PaymentMethod.flags' => 1]);
+            $query->where(['PaymentMethod.flags' => PaymentMethodTable::FLAG_ACTIVE]);
         }
 
         $this->set('items', $this->paginate($query));
@@ -73,7 +74,7 @@ class PaymentMethodController extends AuthenticatedController
     {
         $this->request->allowMethod(['post']);
         $this->addEntity($this->PaymentMethod, [
-            'flags' => (int)($this->request->getData('flags') ?? 1),
+            'flags' => (int)($this->request->getData('flags') ?? PaymentMethodTable::FLAG_ACTIVE),
         ]);
     }
 

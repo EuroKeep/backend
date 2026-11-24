@@ -35,7 +35,7 @@ use eurokeep\Model\Table\PiggybankTable;
  * @property \eurokeep\Model\Entity\Account $account
  * @property \eurokeep\Model\Entity\Piggybank $piggybank
  */
-class TransactionsToPiggybank extends Entity
+class TransactionsToPiggybank extends AbstractEntity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().

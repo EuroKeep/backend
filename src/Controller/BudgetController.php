@@ -45,10 +45,7 @@ class BudgetController extends AuthenticatedController
             'Categories',
         ]);
 
-        $filters = $this->getRequest()->getQueryParams()['filter'] ?? [];
-        foreach ($filters as $fieldname => $value) {
-            $budgetQuery->where(["$fieldname LIKE" => "$value%",]);
-        }
+        $this->applyFilters($budgetQuery, $this->Budget);
 
         $budgets = $budgetQuery->all()->toArray();
 

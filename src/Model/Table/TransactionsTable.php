@@ -49,6 +49,14 @@ use Override;
  */
 class TransactionsTable extends OwnedTable
 {
+    public const int FLAG_ACTIVE = 1;
+    public const int FLAG_SKIP_ANALYSIS = 2;
+
+    public const FLAGS = [
+        'ACTIVE' => self::FLAG_ACTIVE,
+        'SKIP_ANALYSIS' => self::FLAG_SKIP_ANALYSIS,
+    ];
+
     /**
      * Initialize method
      *

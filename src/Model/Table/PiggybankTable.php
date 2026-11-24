@@ -46,6 +46,8 @@ use Override;
  */
 class PiggybankTable extends OwnedTable
 {
+    public const int FLAG_ACTIVE = 1;
+
     /**
      * Initialize method
      *

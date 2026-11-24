@@ -20,6 +20,7 @@ namespace eurokeep\Controller;
 use Cake\Database\Expression\QueryExpression;
 use Cake\ORM\TableRegistry;
 use DateTime;
+use eurokeep\Model\Table\TransactionsTable;
 
 /**
  * Transactions Controller
@@ -29,8 +30,8 @@ use DateTime;
 class TransactionsController extends AuthenticatedController
 {
     public array $paginate = [
-        'limit' => 1000,
-        'maxLimit' => 1000,
+        'limit' => 10000,
+        'maxLimit' => 10000,
         'order' => [
             'Transactions.created' => 'desc',
         ],
@@ -46,7 +47,7 @@ class TransactionsController extends AuthenticatedController
     {
         $this->request->allowMethod(['post']);
         $this->addEntity($this->Transactions, [
-            'flags' => 1,
+            'flags' => TransactionsTable::FLAG_ACTIVE,
         ]);
     }
 

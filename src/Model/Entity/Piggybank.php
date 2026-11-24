@@ -42,7 +42,7 @@ use eurokeep\Model\Table\TransactionsToPiggybanksTable;
  * @property string|null $description
  * @property int $user_id
  */
-class Piggybank extends Entity
+class Piggybank extends AbstractEntity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().

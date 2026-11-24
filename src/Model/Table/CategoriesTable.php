@@ -17,9 +17,13 @@ declare(strict_types=1);
 
 namespace eurokeep\Model\Table;
 
+use Cake\Datasource\EntityInterface;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use eurokeep\Model\Entity\Category;
+use InvalidArgumentException;
 
 /**
  * Categories Model
@@ -47,6 +51,16 @@ use Cake\Validation\Validator;
  */
 class CategoriesTable extends Table
 {
+    public const int FLAG_ACTIVE = 1;
+    public const int FLAG_INCOME_ROOT = 4;
+    public const int FLAG_EXPENSE_ROOT = 8;
+    public const int FLAG_TRANSFER_ROOT = 16;
+    public const int FLAGS_ROOT_TYPE = self::FLAG_INCOME_ROOT | self::FLAG_EXPENSE_ROOT | self::FLAG_TRANSFER_ROOT;
+
+    public const int ID_EXPENSE_ROOT = 64;
+    public const int ID_INCOME_ROOT = 65;
+    public const int ID_TRANSFER_ROOT = 76;
+
     /**
      * Initialize method
      *
@@ -135,5 +149,24 @@ class CategoriesTable extends Table
         return $this->find()->where([
             'parent_id IS NULL',
         ])->toArray();
+    }
+
+    /**
+     * I will return THE root Category carrying the given root-type bit.
+     * @param int $flag One of FLAG_INCOME_ROOT, FLAG_EXPENSE_ROOT, FLAG_TRANSFER_ROOT.
+     * @return Category The root Category.
+     * @throws RecordNotFoundException When no Category carries the bit (broken master data).
+     */
+    public function getRootByFlag(int $flag): Category
+    {
+        if (!in_array($flag, [self::FLAG_INCOME_ROOT, self::FLAG_EXPENSE_ROOT, self::FLAG_TRANSFER_ROOT], true)) {
+            throw new InvalidArgumentException("$flag is no root-type flag");
+        }
+
+        /** @var Category */
+        return $this->find()
+            ->where(['parent_id IS' => null])
+            ->where(["(flags & $flag) <> 0"])
+            ->firstOrFail();
     }
 }

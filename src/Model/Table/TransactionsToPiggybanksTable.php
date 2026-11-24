@@ -48,6 +48,8 @@ use eurokeep\Model\Entity\TransactionsToPiggybank;
  */
 class TransactionsToPiggybanksTable extends Table
 {
+    public const int FLAG_ACTIVE = 1;
+
     /**
      * Initialize method
      *

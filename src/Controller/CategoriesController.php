@@ -43,7 +43,6 @@ class CategoriesController extends AuthenticatedController
     public function index(): void
     {
         $this->request->allowMethod(['get']);
-        $this->Categories->recover();
         $categoriesQuery = $this
             ->Categories
             ->find()
@@ -65,7 +64,6 @@ class CategoriesController extends AuthenticatedController
     public function view($entityId = null): void
     {
         $this->request->allowMethod(['get']);
-        $this->Categories->recover();
         $this->viewEntity($this->Categories, $entityId, 'Category', ['contain' => ['Budget', 'Transactions', 'Subscription']]);
     }
 
@@ -75,8 +73,8 @@ class CategoriesController extends AuthenticatedController
     public function add(): void
     {
         $this->request->allowMethod(['post']);
-        $this->Categories->recover();
         $this->addEntity($this->Categories);
+        $this->Categories->recover();
     }
 
     /**
@@ -103,8 +101,8 @@ class CategoriesController extends AuthenticatedController
     public function delete($entityId = null): void
     {
         $this->request->allowMethod(['delete']);
-        $this->Categories->recover();
         $this->deleteEntity($this->Categories, $entityId, 'Category');
+        $this->Categories->recover();
     }
 
     /**
@@ -126,7 +124,8 @@ class CategoriesController extends AuthenticatedController
      *
      * I move a Category to a new parent (`parent_id`, `null` = root) and to the given zero-based
      * `position` among its new siblings. Moving a Category into itself or one of its own
-     * descendants is rejected with a 400.
+     * descendants is rejected with a 400. So is moving a Category to the root level or moving
+     * one of the three root Categories (see CategoriesTable::FLAGS_ROOT_TYPE).
      *
      * @param mixed $entityId Identifier of the Category. Not type-hinted so that a missing or
      *   non-numeric route segment can be reported as a normal 400 response instead of an
@@ -180,8 +179,10 @@ class CategoriesController extends AuthenticatedController
         } catch (DatabaseException $exception) {
             // e.g. moving a Category into itself or one of its descendants
             $this->fail(400, $exception->getMessage());
-        } catch (PersistenceFailedException) {
-            $this->fail(400, 'Parent category not found');
+        } catch (PersistenceFailedException $exception) {
+            // e.g. unknown parent, or the root convention of CategoriesTable::buildRules()
+            // (no new root, no root below another Category)
+            $this->failMany(400, $exception->getEntity()->getErrors());
         }
 
         $this->set('item', $this->Categories->get($item->id));
