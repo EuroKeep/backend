@@ -37,8 +37,8 @@ class AnalyzerController extends AuthenticatedController
     public function category(): void
     {
         $this->request->allowMethod(['get']);
-        $start = Chronos::createFromInterface(new DateTime($this->dateParam('start')))->startOfMonth();
-        $end = Chronos::createFromInterface(new DateTime($this->dateParam('end')))->startOfMonth();
+        $start = Chronos::createFromInterface(new DateTime($this->dateParam('start')))->startOfDay();
+        $end = Chronos::createFromInterface(new DateTime($this->dateParam('end')))->startOfDay();
         $currency = self::CURRENCY;
 
         /** @var CategoriesTable $categoriesTable */
